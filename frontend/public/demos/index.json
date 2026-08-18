@@ -1,0 +1,16 @@
+{
+ "demos": [
+  {
+   "name": "demo-en",
+   "claim": "AI will replace software developers.",
+   "rounds": 6,
+   "recorded_at": "2026-08-18T11:07:47+00:00"
+  },
+  {
+   "name": "demo-tr",
+   "claim": "Yapay zeka yazilimcilarin yerini alacak.",
+   "rounds": 5,
+   "recorded_at": "2026-08-18T10:52:59+00:00"
+  }
+ ]
+}

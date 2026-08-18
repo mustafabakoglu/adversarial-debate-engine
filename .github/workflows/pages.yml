@@ -1,0 +1,76 @@
+name: Deploy the demo to GitHub Pages
+
+# The page is useful without a server: recorded debates replay client-side, so a static
+# host gives a reviewer something real to click. Live debates still need the container
+# (see Dockerfile) - the page detects which of the two it is and says so.
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+
+      - name: Keep the static recordings in step with the backend's
+        run: |
+          mkdir -p frontend/public/demos
+          cp backend/demos/*.json frontend/public/demos/
+          python - <<'PY'
+          import json, pathlib
+          demos = []
+          for path in sorted(pathlib.Path("frontend/public/demos").glob("*.json")):
+              if path.name == "index.json":
+                  continue
+              data = json.loads(path.read_text(encoding="utf-8"))
+              demos.append({
+                  "name": path.stem,
+                  "claim": data["claim"],
+                  "rounds": data.get("rounds", 0),
+                  "recorded_at": data.get("recorded_at", ""),
+              })
+          pathlib.Path("frontend/public/demos/index.json").write_text(
+              json.dumps({"demos": demos}, ensure_ascii=False, indent=1), encoding="utf-8")
+          print("indexed:", [d["name"] for d in demos])
+          PY
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

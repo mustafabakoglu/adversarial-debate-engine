@@ -12,10 +12,12 @@ const EXAMPLES = [
 interface Props {
   onStart: (claim: string) => void;
   onReplay: (name: string, claim: string) => void;
+  /** null while unknown, false on a static deployment with no engine behind it. */
+  live: boolean | null;
   disabled?: boolean;
 }
 
-export function ClaimInput({ onStart, onReplay, disabled = false }: Props) {
+export function ClaimInput({ onStart, onReplay, live, disabled = false }: Props) {
   const [claim, setClaim] = useState("");
   const [demos, setDemos] = useState<DemoSummary[]>([]);
 
@@ -32,7 +34,7 @@ export function ClaimInput({ onStart, onReplay, disabled = false }: Props) {
   }, []);
   const trimmed = claim.trim();
   const tooShort = trimmed.length > 0 && trimmed.length < 8;
-  const canStart = trimmed.length >= 8 && !disabled;
+  const canStart = trimmed.length >= 8 && !disabled && live !== false;
 
   const submit = () => {
     if (canStart) onStart(trimmed);
@@ -68,14 +70,20 @@ export function ClaimInput({ onStart, onReplay, disabled = false }: Props) {
           }}
           rows={3}
           maxLength={400}
-          placeholder="Enter a claim..."
-          disabled={disabled}
+          placeholder={
+            live === false ? "Read-only demo — watch a recorded debate below" : "Enter a claim..."
+          }
+          disabled={disabled || live === false}
           className="w-full resize-none rounded-2xl border border-line bg-surface px-6 py-5 text-lg leading-relaxed text-ink placeholder:text-ink-faint focus:border-ink-faint focus:outline-none disabled:opacity-50"
         />
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
           <span className="text-xs text-ink-faint">
-            {tooShort ? "A claim needs at least 8 characters." : "⌘ / Ctrl + Enter to start"}
+            {live === false
+              ? "Live debates need a model key — run it locally or deploy the container."
+              : tooShort
+                ? "A claim needs at least 8 characters."
+                : "⌘ / Ctrl + Enter to start"}
           </span>
           <button
             type="button"
@@ -94,8 +102,8 @@ export function ClaimInput({ onStart, onReplay, disabled = false }: Props) {
             Or watch one that already happened
           </p>
           <p className="mb-4 text-xs leading-relaxed text-ink-faint">
-            A real debate, recorded and replayed at the same pace. No model calls, so it
-            works with no key and no network.
+            A real debate, recorded and replayed at the same pace. No model calls, so it works
+            with no key and no network.
           </p>
           <div className="flex flex-col gap-2">
             {demos.map((demo) => (

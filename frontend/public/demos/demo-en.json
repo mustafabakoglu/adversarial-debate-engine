@@ -1,0 +1,302 @@
+{
+ "claim": "AI will replace software developers.",
+ "provider": "mistral",
+ "model": "mistral-large-latest",
+ "rounds": 6,
+ "recorded_at": "2026-08-18T11:07:47+00:00",
+ "events": [
+  {
+   "type": "round_start",
+   "number": 1,
+   "name": "Opening Arguments"
+  },
+  {
+   "type": "turn_start",
+   "round": 1,
+   "round_name": "Opening Arguments",
+   "speaker": "prosecutor",
+   "kind": "opening"
+  },
+  {
+   "type": "turn_end",
+   "round": 1,
+   "round_name": "Opening Arguments",
+   "speaker": "prosecutor",
+   "kind": "opening",
+   "text": "You keep saying \"replace\" like it's a swap—one human out, one AI in. Try this: a team ships a feature on Friday, AI flags a race condition on Monday, but the sprint is already closed, the QA window is gone, and the PM has moved the budget to the next shiny thing. The bug sits until the next cycle, which means the AI didn’t replace the developer—it just made the feedback loop longer, the coordination tax higher, and the actual fix someone else’s problem. That’s not replacement, that’s a new layer of friction. Where’s the productivity gain?"
+  },
+  {
+   "type": "turn_start",
+   "round": 1,
+   "round_name": "Opening Arguments",
+   "speaker": "defender",
+   "kind": "opening"
+  },
+  {
+   "type": "turn_end",
+   "round": 1,
+   "round_name": "Opening Arguments",
+   "speaker": "defender",
+   "kind": "opening",
+   "text": "Oh, you think AI will replace developers? Try telling that to the team that just spent three weeks debugging a race condition in a microservice—one the AI generated, then confidently declared \"correct\" three times in a row. You don’t replace the person who knows why the code is wrong, not just that it is. The cost isn’t in writing the first draft; it’s in the silence when the AI can’t explain its own logic, and the clock keeps ticking."
+  },
+  {
+   "type": "round_start",
+   "number": 2,
+   "name": "Rebuttal"
+  },
+  {
+   "type": "turn_start",
+   "round": 2,
+   "round_name": "Rebuttal",
+   "speaker": "prosecutor",
+   "kind": "rebuttal"
+  },
+  {
+   "type": "turn_end",
+   "round": 2,
+   "round_name": "Rebuttal",
+   "speaker": "prosecutor",
+   "kind": "rebuttal",
+   "text": "You quoted \"the person who knows why the code is wrong, not just that it is.\" That’s the load-bearing phrase, and it’s already broken.\n\nKnowing why is not a mystical human gift—it’s pattern recognition over time. The AI that generated the bug also generated the last fifty correct fixes for the same pattern. It has the why in its weights; it just can’t articulate it in a stand-up. But the team doesn’t need a soliloquy—they need the fix, the test case, and the commit message that says “race condition in thread X, lock Y was missing.” If the AI can’t give them that, it’s not replacing the developer; it’s just a bad intern who can’t fill out the Jira ticket.\n\nYou’re defending a priesthood of explanation that nobody pays for. The business pays for working software, not poetry about why it works."
+  },
+  {
+   "type": "turn_start",
+   "round": 2,
+   "round_name": "Rebuttal",
+   "speaker": "defender",
+   "kind": "rebuttal"
+  },
+  {
+   "type": "turn_end",
+   "round": 2,
+   "round_name": "Rebuttal",
+   "speaker": "defender",
+   "kind": "rebuttal",
+   "text": "\"a new layer of friction.\" That’s the phrase you’re betting on? Cute.\n\nFriction is what happens when you introduce a tool that exposes problems earlier than humans would. You call it a tax; I call it the cost of not shipping broken code. The sprint closed on Friday, the AI flagged it on Monday—so what? The alternative isn’t a world where the bug never existed; it’s a world where it ships, blows up in production, and the team scrambles at 3 AM while the PM still moves the budget to the next shiny thing. The loop isn’t longer—it’s visible. And visibility is what you’re actually allergic to, because it forces you to admit that the old way was just slower at failing.\n\nYou want to talk about coordination? Fine. The AI doesn’t care if the sprint is closed. It doesn’t care if the PM is already on the next thing. It just tells you, now, that the thing you shipped is broken. If your process can’t handle that, the problem isn’t the AI—it’s the process. And if the process is the hill you’re dying on, then you’ve already lost."
+  },
+  {
+   "type": "round_start",
+   "number": 3,
+   "name": "Cross Examination"
+  },
+  {
+   "type": "turn_start",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "prosecutor",
+   "kind": "cross_question"
+  },
+  {
+   "type": "turn_end",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "prosecutor",
+   "kind": "cross_question",
+   "text": "You keep calling it \"visibility\" like that’s a free good. Visibility without agency is just noise. The AI flags the race condition on Monday—great. Who reopens the sprint, reallocates the budget, and tells the PM the shiny new thing has to wait? Not the AI. So tell me: in your world, who actually has the authority to act on that \"visibility,\" and what happens when they say no?"
+  },
+  {
+   "type": "turn_start",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "defender",
+   "kind": "cross_answer"
+  },
+  {
+   "type": "turn_end",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "defender",
+   "kind": "cross_answer",
+   "text": "The product owner has the authority, same as they always did. What changes is that on Monday they’re looking at a reproducible test case and a proposed fix, not a vague Slack message from QA at 4:45 pm on Friday. If they say no, the bug still exists—it just exists with a timestamp and a paper trail. That’s not noise; that’s evidence. And evidence is what you use to fire a PM who keeps saying no."
+  },
+  {
+   "type": "turn_start",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "defender",
+   "kind": "cross_question"
+  },
+  {
+   "type": "turn_end",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "defender",
+   "kind": "cross_question",
+   "text": "You say the AI \"just tells you, now, that the thing you shipped is broken.\" Fine. When the AI flags a race condition it can't fix, who decides whether the fix is worth the risk—rewriting a critical path, retesting, redeploying? Not the AI. So tell me: if the human is still the one holding the risk ledger, what exactly has been replaced?"
+  },
+  {
+   "type": "turn_start",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "prosecutor",
+   "kind": "cross_answer"
+  },
+  {
+   "type": "turn_end",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "prosecutor",
+   "kind": "cross_answer",
+   "text": "The human still holds the risk ledger, but the ledger is now empty on page one.\n\nWhat’s replaced is the grunt work that fills the first page: the boilerplate, the test scaffolding, the first draft of the fix that would have been correct 80% of the time if the human had written it. The AI doesn’t remove the need for a human to sign off on risk—it removes the need for a human to spend time on the parts that don’t require risk assessment. You’re still the one who says “ship it,” but you’re not the one who wrote the patch at 2 AM. That’s the replacement. The rest is just you pretending the job was only ever about the last signature."
+  },
+  {
+   "type": "status",
+   "message": "The judge may have a question"
+  },
+  {
+   "type": "round_start",
+   "number": 4,
+   "name": "From the Bench"
+  },
+  {
+   "type": "turn_end",
+   "round": 4,
+   "round_name": "From the Bench",
+   "speaker": "judge",
+   "kind": "judge_question",
+   "text": "You both keep circling the same ledger: the human still signs off on risk, the human still decides what to ship. So let’s settle it—what, precisely, is the irreducible core of a software developer’s job that an AI cannot do? Not the parts you’d happily delegate to a junior, not the parts that are already automated away. The thing that, if the AI could do it, would mean the job no longer needs a human at all. Answer in one sentence, and don’t tell me it’s ‘judgment’ unless you’re ready to explain why an AI with perfect recall of every past judgment call still can’t make the next one."
+  },
+  {
+   "type": "turn_start",
+   "round": 4,
+   "round_name": "From the Bench",
+   "speaker": "prosecutor",
+   "kind": "bench_answer"
+  },
+  {
+   "type": "turn_end",
+   "round": 4,
+   "round_name": "From the Bench",
+   "speaker": "prosecutor",
+   "kind": "bench_answer",
+   "text": "The irreducible core is deciding which problem is worth solving next.\n\nNot which fix to ship—an AI with perfect recall can rank past decisions by outcome. Not how to implement it—boilerplate, tests, even the first draft of the fix are already delegated. The thing that breaks when you remove the human is the moment the PM says “we need feature X” and the developer says “no, we need to fix Y first, because Z is about to collapse.” That’s not judgment; it’s political courage backed by technical credibility. An AI can’t quit, can’t unionise, can’t stare down a PM and say “I will not build this.” Take that away, and you don’t have a developer—you have a very fast intern with no skin in the game."
+  },
+  {
+   "type": "turn_start",
+   "round": 4,
+   "round_name": "From the Bench",
+   "speaker": "defender",
+   "kind": "bench_answer"
+  },
+  {
+   "type": "turn_end",
+   "round": 4,
+   "round_name": "From the Bench",
+   "speaker": "defender",
+   "kind": "bench_answer",
+   "text": "The irreducible core is deciding which problem is worth solving next.\n\nAn AI can recall every past judgment, generate every possible fix, and simulate every risk—it cannot choose which outcome matters more than the others when the trade-offs are political, not technical. That choice still requires a human who can be fired, promoted, or ignored, and whose signature on the ticket means something more than “the model converged.” Everything else is just typing."
+  },
+  {
+   "type": "round_start",
+   "number": 5,
+   "name": "Last Word"
+  },
+  {
+   "type": "turn_start",
+   "round": 5,
+   "round_name": "Last Word",
+   "speaker": "prosecutor",
+   "kind": "closing"
+  },
+  {
+   "type": "turn_end",
+   "round": 5,
+   "round_name": "Last Word",
+   "speaker": "prosecutor",
+   "kind": "closing",
+   "text": "You conceded the ledger—fine. The AI can draft, test, even propose fixes. What it can’t do is walk into a room and say “this whole project is a lie” when the PM is selling vaporware. That’s not judgment; it’s the one thing that keeps the ledger honest in the first place.\n\nYou never answered the coordination tax. The AI flags the bug on Monday, but the sprint is closed, the budget is spent, and the PM is already on the next thing. Who reopens the ticket? Not the AI. Who pays the political cost of admitting the last thing shipped was broken? Not the AI. You called it “visibility,” but visibility without authority is just a longer list of things the team will ignore until they blow up.\n\nThe job isn’t typing. It’s the moment someone has to say “no.” That’s the part you can’t replace."
+  },
+  {
+   "type": "turn_start",
+   "round": 5,
+   "round_name": "Last Word",
+   "speaker": "defender",
+   "kind": "closing"
+  },
+  {
+   "type": "turn_end",
+   "round": 5,
+   "round_name": "Last Word",
+   "speaker": "defender",
+   "kind": "closing",
+   "text": "You conceded the ledger. Fine. The human still signs off on risk, still says “ship it.” But you keep pretending the ledger was ever the job.\n\nThe grunt work—the boilerplate, the tests, the first draft that’s right 80% of the time—isn’t a side show. It’s the hours that add up to a salary. If the AI writes the patch at 2 AM, the human who used to do it is now deciding whether to merge it, not whether to stay late. That’s not delegation; that’s replacement of the thing that paid the rent.\n\nYou never answered the coordination tax. The AI flags the bug on Monday, but the sprint is closed. Who reopens it? The PM who already moved the budget. The AI doesn’t care; the human does. And if the human can’t make the PM care, the bug still ships—just with a timestamp. That’s not visibility. That’s a paper trail for the next postmortem.\n\nThe core that survived: deciding which problem is worth solving next. The core that didn’t: everything else. And everything else is the job."
+  },
+  {
+   "type": "status",
+   "message": "Judge reviewing the transcript"
+  },
+  {
+   "type": "verdict",
+   "prosecutor_score": 88,
+   "defender_score": 85,
+   "winner": "prosecutor",
+   "confidence": 75,
+   "reasoning": "The prosecutor won by focusing the debate on the irreducible core of the job—political courage and authority, not just technical work. They answered the judge’s question directly and turned the defender’s ‘visibility’ into a liability: noise without agency. The defender had strong points on friction as a cost of quality, but never fully countered the prosecutor’s claim that the human’s role in saying ‘no’ is unreplaceable.",
+   "strongest_argument": "The irreducible core is deciding which problem is worth solving next. That’s not judgment; it’s political courage backed by technical credibility. An AI can’t quit, can’t unionise, can’t stare down a PM and say ‘I will not build this.’ — PROSECUTOR",
+   "weakest_argument": "The cost isn’t in writing the first draft; it’s in the silence when the AI can’t explain its own logic, and the clock keeps ticking. — DEFENDER",
+   "unresolved_question": "Can a team redesign its process to give the AI’s ‘visibility’ real authority, or is the political cost of admitting failure always a human burden?"
+  },
+  {
+   "type": "round_start",
+   "number": 6,
+   "name": "Challenge 1"
+  },
+  {
+   "type": "turn_end",
+   "round": 6,
+   "round_name": "Challenge 1",
+   "speaker": "user",
+   "kind": "user_argument",
+   "text": "You both treated 'developer' as one job. Debugging is judgement under uncertainty, and neither of you said what an AI would have to do to own that call."
+  },
+  {
+   "type": "turn_start",
+   "round": 6,
+   "round_name": "Challenge 1",
+   "speaker": "prosecutor",
+   "kind": "challenge_response"
+  },
+  {
+   "type": "turn_end",
+   "round": 6,
+   "round_name": "Challenge 1",
+   "speaker": "prosecutor",
+   "kind": "challenge_response",
+   "text": "You sliced the job into \"debugging\" like it's a single move. It's not. Debugging is three things, in order: noticing the symptom, tracing it to the root, and deciding whether the fix is worth the risk. The AI already owns the first two—it flags the race condition faster than any human, and it traces the call stack without coffee breaks. What it can't do is walk into the war room and say \"this fix will take three days, the PM wants it in one, and if we cut corners we'll own the outage.\" That's not debugging. That's politics with a debugger open.\n\nYou want the AI to \"own that call\"? Fine. Give it a P&L, a seat in the stand-up, and the authority to tell the PM the sprint is slipping. Until then, it's just a very fast intern who can't quit."
+  },
+  {
+   "type": "turn_start",
+   "round": 6,
+   "round_name": "Challenge 1",
+   "speaker": "defender",
+   "kind": "challenge_response"
+  },
+  {
+   "type": "turn_end",
+   "round": 6,
+   "round_name": "Challenge 1",
+   "speaker": "defender",
+   "kind": "challenge_response",
+   "text": "You sliced the job into \"debugging\" like it's a separate line item. It isn't. Debugging is the moment the ledger meets the real world: the code is wrong, the AI flags it, and someone has to decide whether the fix is worth the risk of breaking something else. That call isn't a mystical gift—it's pattern recognition plus the authority to say \"no\" when the pattern is wrong. The AI has the patterns; it lacks the authority. But authority isn't a skill—it's a seat at the table. If the AI can generate the fix, the test, and the commit message, the only thing left for the human is the signature. And if the signature is all that's left, the job isn't debugging. It's being the last one to touch the keyboard before the deploy button. That's not judgment. That's a rubber stamp with a pulse."
+  },
+  {
+   "type": "status",
+   "message": "Judge re-reviewing with your argument included"
+  },
+  {
+   "type": "verdict",
+   "prosecutor_score": 88,
+   "defender_score": 85,
+   "winner": "prosecutor",
+   "confidence": 75,
+   "reasoning": "The prosecutor edged this out by consistently tying the replacement claim to concrete agency—who reopens the sprint, who says no to the PM, who carries the political cost. The defender’s strongest move was calling visibility a feature, not a bug, but they never fully answered the prosecutor’s challenge that visibility without authority is just noise. Both sides conceded the ledger, but the prosecutor turned that concession into a sharper picture of what the job actually is: not typing, but the moment someone has to say no.",
+   "strongest_argument": "The irreducible core is deciding which problem is worth solving next. [...] That’s not judgment; it’s political courage backed by technical credibility. An AI can’t quit, can’t unionise, can’t stare down a PM and say 'I will not build this.' — PROSECUTOR",
+   "weakest_argument": "The core that survived: deciding which problem is worth solving next. The core that didn’t: everything else. And everything else is the job. — DEFENDER",
+   "unresolved_question": "Can an AI ever be granted the authority to reopen a sprint, reallocate budget, or overrule a PM, or is that authority inherently tied to human accountability?"
+  },
+  {
+   "type": "done"
+  }
+ ]
+}

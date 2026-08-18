@@ -25,6 +25,18 @@
         "dev"
       ],
       "port": 5173
+    },
+    {
+      "name": "static-demo",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4173",
+        "--directory",
+        "frontend/dist"
+      ],
+      "port": 4173
     }
   ]
 }

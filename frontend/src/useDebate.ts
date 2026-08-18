@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { challengeVerdict, replayDebate, startDebate, type StreamHandlers } from "./api";
+import {
+  challengeVerdict,
+  replayDebate,
+  replayLocally,
+  startDebate,
+  type StreamHandlers,
+} from "./api";
 import { keyboard } from "./sound";
 import type { DebateEvent, Entry, Message } from "./types";
 
@@ -262,7 +268,7 @@ export function useDebate() {
   );
 
   const replay = useCallback(
-    (name: string, claim: string) => {
+    (name: string, claim: string, local = false) => {
       abortRef.current?.();
       stopClock();
       queueRef.current = [];
@@ -271,7 +277,9 @@ export function useDebate() {
       counterRef.current = 0;
       sessionRef.current = null;
       setState({ ...INITIAL, claim, running: true, recorded: true, status: "Replaying" });
-      abortRef.current = replayDebate(name, handlers());
+      abortRef.current = local
+        ? replayLocally(name, handlers())
+        : replayDebate(name, handlers());
     },
     [handlers, stopClock],
   );
