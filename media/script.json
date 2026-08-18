@@ -1,0 +1,13 @@
+[
+ {"id":"01_hook","text":"Ask any AI assistant whether your plan is good, and it will find reasons it is good. Which makes it useless for the one thing you actually wanted help with. Deciding. So I built one that cannot agree with you."},
+ {"id":"02_setup","text":"You give it a claim. Two agents are assigned opposite sides, and neither of them chose the side it is defending."},
+ {"id":"03_blind","text":"Both openings are written blind. Neither side can see the other, so nobody is reacting yet. Then the rebuttal round, where each side has to take apart what the other actually said, quoting the exact phrase. Bringing a new argument of your own is forbidden."},
+ {"id":"04_cross","text":"Round three is cross examination. One question each, and the answer has to lead with the answer. Evasion is visible here, and the judge is told to punish it."},
+ {"id":"05_referee","text":"Now, nobody decided this debate would be six rounds. After each round a referee reads the transcript and asks one question. Is this still going somewhere? If it is, it names the exact tension still open, and that sentence becomes the next round's instruction. A debate that genuinely resolves closes in four rounds. One where neither side gives way runs to ten."},
+ {"id":"06_bench","text":"Before the closing statements, the judge gets a question of its own. It is told to ask only when something load bearing has gone undefended. Both sides have to answer it, and a dodge to the judge's face costs more than a dodge to your opponent."},
+ {"id":"07_verdict","text":"Then the verdict. And here is the part that matters. It is not scoring who is right. It is scoring who argued better. A debater who defends a false claim skilfully beats one who defends a true claim badly."},
+ {"id":"08_challenge","text":"And this is where a product like this usually collapses into flattery. You argue back. Both sides have to answer you, specifically. The judge is told your argument carries no authority just because you started the debate, and that it can still move the verdict if it is genuinely strong."},
+ {"id":"09_language","text":"There is no language setting. It argues in the language of your claim, verdict included."},
+ {"id":"10_tech","text":"Under the hood: FastAPI, server sent events, one model behind four different system prompts, structured outputs for the verdict, no database. The client paces the typing so it reads like an argument instead of pasted text. And yes, the keys make a sound."},
+ {"id":"11_close","text":"Most assistants tell you what you want to hear. This one makes you earn it."}
+]

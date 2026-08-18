@@ -19,6 +19,11 @@ textbook prose, and the referee and the judge answer in it too. Submit in Englis
 and you get English; submit in Turkish, Spanish or Japanese and the whole debate,
 including the verdict, comes back in that language.
 
+## The two-minute version
+
+[**media/demo.mp4**](media/demo.mp4) — 2:55, a real debate captured from the running
+app, with the pipeline that produced it in [media/](media/README.md).
+
 ## How the debate is structured
 
 | Round | What happens |
@@ -294,13 +299,14 @@ cd backend
 ./.venv/Scripts/python.exe -m pytest
 ```
 
-Twenty-three tests, no network and no API key: every one runs against a stub
-provider, so the suite covers the parts that are actually easy to break — that a
+Thirty tests, no network and no API key: every one runs against a stub provider or a
+mocked transport, so the suite covers the parts that are actually easy to break — that a
 settled debate closes in four rounds and a live one earns more, that the round cap
 holds when neither side gives way, that the bench question is optional and can
 target one side, that asterisks are stripped while emoji survive, that a verdict
 contradicting its own scores is reconciled, that a failing referee closes the debate
-instead of breaking it, and that replay works with no engine configured at all.
+instead of breaking it, that an exhausted key rotates instead of backing off, and
+that replay works with no engine configured at all.
 
 ## Design notes
 
