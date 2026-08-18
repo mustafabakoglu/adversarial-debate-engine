@@ -1,102 +1,60 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
 
-import { streamDebate } from "./api";
 import { ClaimInput } from "./components/ClaimInput";
 import { DebateView } from "./components/DebateView";
-import type { DebateEvent, Turn, Verdict } from "./types";
+import { SettingsBar } from "./components/SettingsBar";
+import { useDebate } from "./useDebate";
+import { useTheme, useTypingSound } from "./useSettings";
 
 export default function App() {
-  const [claim, setClaim] = useState<string | null>(null);
-  const [turns, setTurns] = useState<Turn[]>([]);
-  const [status, setStatus] = useState<string | null>(null);
-  const [verdict, setVerdict] = useState<Verdict | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [running, setRunning] = useState(false);
+  const {
+    claim,
+    entries,
+    status,
+    error,
+    running,
+    recorded,
+    canChallenge,
+    start,
+    replay,
+    challenge,
+    reset,
+  } = useDebate();
+  const theme = useTheme();
+  const sound = useTypingSound();
 
-  const abortRef = useRef<(() => void) | null>(null);
-
-  // Abort an in-flight debate if the component goes away.
-  useEffect(() => () => abortRef.current?.(), []);
-
-  const handleEvent = useCallback((event: DebateEvent) => {
-    switch (event.type) {
-      case "status":
-        setStatus(event.message);
-        break;
-      case "round_start":
-        setStatus(`Round ${event.number} — ${event.name}`);
-        break;
-      case "turn": {
-        const { type: _type, ...turn } = event;
-        setTurns((current) => [...current, turn]);
-        break;
-      }
-      case "verdict": {
-        const { type: _type, ...result } = event;
-        setVerdict(result);
-        setStatus(null);
-        break;
-      }
-      case "error":
-        setError(event.message);
-        setStatus(null);
-        break;
-      case "claim":
-      case "done":
-        break;
-    }
-  }, []);
-
-  const start = useCallback(
+  // Starting a debate is a click, which is the browser's price for playing audio.
+  const startDebate = useCallback(
     (nextClaim: string) => {
-      abortRef.current?.();
-      setClaim(nextClaim);
-      setTurns([]);
-      setVerdict(null);
-      setError(null);
-      setStatus("Opening the debate...");
-      setRunning(true);
-
-      abortRef.current = streamDebate(nextClaim, {
-        onEvent: handleEvent,
-        onClose: (transportError) => {
-          setRunning(false);
-          setStatus(null);
-          if (transportError) {
-            setError((current) =>
-              current ??
-              "Lost the connection to the debate server. Make sure the backend is running, then try again.",
-            );
-          }
-        },
-      });
+      sound.armFromGesture();
+      start(nextClaim);
     },
-    [handleEvent],
+    [sound, start],
   );
 
-  const reset = useCallback(() => {
-    abortRef.current?.();
-    abortRef.current = null;
-    setClaim(null);
-    setTurns([]);
-    setStatus(null);
-    setVerdict(null);
-    setError(null);
-    setRunning(false);
-  }, []);
+  const startReplay = useCallback(
+    (name: string, nextClaim: string) => {
+      sound.armFromGesture();
+      replay(name, nextClaim);
+    },
+    [replay, sound],
+  );
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-canvas text-ink">
+      <SettingsBar sound={sound} theme={theme} />
       {claim === null ? (
-        <ClaimInput onStart={start} />
+        <ClaimInput onStart={startDebate} onReplay={startReplay} />
       ) : (
         <DebateView
           claim={claim}
-          turns={turns}
+          entries={entries}
           status={status}
-          verdict={verdict}
           error={error}
           running={running}
+          recorded={recorded}
+          canChallenge={canChallenge}
+          onChallenge={challenge}
           onReset={reset}
         />
       )}

@@ -1,35 +1,124 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
+/* Tailwind's colour utilities point at these, and these point at the palette
+   variables below — so `bg-surface` and `text-ink` follow the theme without a
+   single dark: variant in the components. */
 @theme {
-  --color-prosecutor: oklch(0.62 0.19 255);
-  --color-prosecutor-dim: oklch(0.42 0.12 255);
-  --color-defender: oklch(0.62 0.21 20);
-  --color-defender-dim: oklch(0.42 0.14 20);
-  --font-sans: "Inter var", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-canvas: var(--c-canvas);
+  --color-surface: var(--c-surface);
+  --color-raised: var(--c-raised);
+  --color-line: var(--c-line);
+  --color-line-soft: var(--c-line-soft);
+  --color-ink: var(--c-ink);
+  --color-ink-soft: var(--c-ink-soft);
+  --color-ink-faint: var(--c-ink-faint);
+  --color-prosecutor: var(--c-prosecutor);
+  --color-defender: var(--c-defender);
 }
 
-html {
+/* Light is the base palette. Surfaces are deliberately low-chroma so the two
+   side colours stay the only saturated things on screen. */
+:root {
+  color-scheme: light;
+
+  --c-canvas: oklch(0.985 0.002 265);
+  --c-surface: oklch(1 0 0);
+  --c-raised: oklch(0.965 0.003 265);
+  --c-line: oklch(0.9 0.006 265);
+  --c-line-soft: oklch(0.94 0.004 265);
+  --c-ink: oklch(0.24 0.01 265);
+  --c-ink-soft: oklch(0.46 0.012 265);
+  --c-ink-faint: oklch(0.62 0.012 265);
+  --c-prosecutor: oklch(0.5 0.17 250);
+  --c-defender: oklch(0.5 0.19 22);
+}
+
+/* System preference, unless the reader has explicitly chosen light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --c-canvas: oklch(0.18 0.004 265);
+    --c-surface: oklch(0.215 0.005 265);
+    --c-raised: oklch(0.245 0.006 265);
+    --c-line: oklch(0.31 0.008 265);
+    --c-line-soft: oklch(0.26 0.006 265);
+    --c-ink: oklch(0.95 0.003 265);
+    --c-ink-soft: oklch(0.74 0.006 265);
+    --c-ink-faint: oklch(0.56 0.008 265);
+    --c-prosecutor: oklch(0.7 0.15 250);
+    --c-defender: oklch(0.68 0.17 22);
+  }
+}
+
+/* Explicit choice wins in both directions. */
+:root[data-theme="dark"] {
   color-scheme: dark;
+
+  --c-canvas: oklch(0.18 0.004 265);
+  --c-surface: oklch(0.215 0.005 265);
+  --c-raised: oklch(0.245 0.006 265);
+  --c-line: oklch(0.31 0.008 265);
+  --c-line-soft: oklch(0.26 0.006 265);
+  --c-ink: oklch(0.95 0.003 265);
+  --c-ink-soft: oklch(0.74 0.006 265);
+  --c-ink-faint: oklch(0.56 0.008 265);
+  --c-prosecutor: oklch(0.7 0.15 250);
+  --c-defender: oklch(0.68 0.17 22);
 }
 
 body {
   margin: 0;
-  background-color: oklch(0.16 0.008 265);
-  color: oklch(0.94 0.005 265);
+  background-color: var(--c-canvas);
+  color: var(--c-ink);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
+/* The caret that trails text while a turn is being typed. */
+@keyframes caret-blink {
+  0%,
+  45% {
     opacity: 1;
-    transform: translateY(0);
+  }
+  55%,
+  100% {
+    opacity: 0;
   }
 }
 
-.animate-rise {
-  animation: rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+.caret {
+  display: inline-block;
+  width: 0.5ch;
+  height: 1.05em;
+  margin-left: 0.12em;
+  vertical-align: text-bottom;
+  background-color: currentColor;
+  animation: caret-blink 1s steps(1, end) infinite;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.enter {
+  animation: enter 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Motion is decorative here; the final state carries the information. */
+@media (prefers-reduced-motion: reduce) {
+  .enter,
+  .caret {
+    animation: none;
+  }
 }

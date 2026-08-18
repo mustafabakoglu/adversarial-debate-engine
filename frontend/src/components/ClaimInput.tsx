@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { fetchDemos, type DemoSummary } from "../api";
 
 const EXAMPLES = [
   "AI will replace software developers.",
@@ -9,11 +11,25 @@ const EXAMPLES = [
 
 interface Props {
   onStart: (claim: string) => void;
+  onReplay: (name: string, claim: string) => void;
   disabled?: boolean;
 }
 
-export function ClaimInput({ onStart, disabled = false }: Props) {
+export function ClaimInput({ onStart, onReplay, disabled = false }: Props) {
   const [claim, setClaim] = useState("");
+  const [demos, setDemos] = useState<DemoSummary[]>([]);
+
+  // Recorded debates are optional: none on disk means this section simply is not
+  // there, and the server being unreachable is not worth an error here.
+  useEffect(() => {
+    let live = true;
+    void fetchDemos().then((found) => {
+      if (live) setDemos(found);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
   const trimmed = claim.trim();
   const tooShort = trimmed.length > 0 && trimmed.length < 8;
   const canStart = trimmed.length >= 8 && !disabled;
@@ -24,15 +40,16 @@ export function ClaimInput({ onStart, disabled = false }: Props) {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-6 py-20">
-      <p className="mb-3 text-xs font-medium tracking-[0.2em] text-white/40 uppercase">
+      <p className="mb-3 text-xs font-medium tracking-[0.2em] text-ink-faint uppercase">
         Adversarial AI Debate Engine
       </p>
       <h1 className="mb-4 text-center text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
         This AI does not agree with you.
       </h1>
-      <p className="mb-12 max-w-xl text-center text-base leading-relaxed text-white/50">
-        Submit a claim. One agent attacks it, one defends it, and each must answer the
-        other. A third agent scores how well they argued &mdash; not whether you were right.
+      <p className="mb-12 max-w-xl text-center text-base leading-relaxed text-ink-soft">
+        Submit a claim. One agent attacks it, one defends it, and they keep going until a
+        referee rules the disagreement is actually finished. A third agent then scores how
+        well they argued &mdash; not whether you were right.
       </p>
 
       <div className="w-full">
@@ -53,26 +70,54 @@ export function ClaimInput({ onStart, disabled = false }: Props) {
           maxLength={400}
           placeholder="Enter a claim..."
           disabled={disabled}
-          className="w-full resize-none rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-5 text-lg leading-relaxed text-white placeholder:text-white/25 focus:border-white/25 focus:outline-none disabled:opacity-50"
+          className="w-full resize-none rounded-2xl border border-line bg-surface px-6 py-5 text-lg leading-relaxed text-ink placeholder:text-ink-faint focus:border-ink-faint focus:outline-none disabled:opacity-50"
         />
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-          <span className="text-xs text-white/30">
+          <span className="text-xs text-ink-faint">
             {tooShort ? "A claim needs at least 8 characters." : "⌘ / Ctrl + Enter to start"}
           </span>
           <button
             type="button"
             onClick={submit}
             disabled={!canStart}
-            className="rounded-full bg-white px-7 py-3 text-sm font-semibold tracking-wide text-neutral-950 uppercase transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/40"
+            className="rounded-full bg-ink px-7 py-3 text-sm font-semibold tracking-wide text-canvas uppercase transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-line disabled:text-ink-faint disabled:opacity-100"
           >
             Start Debate
           </button>
         </div>
       </div>
 
+      {demos.length ? (
+        <div className="mt-14 w-full">
+          <p className="mb-2 text-xs tracking-[0.16em] text-ink-faint uppercase">
+            Or watch one that already happened
+          </p>
+          <p className="mb-4 text-xs leading-relaxed text-ink-faint">
+            A real debate, recorded and replayed at the same pace. No model calls, so it
+            works with no key and no network.
+          </p>
+          <div className="flex flex-col gap-2">
+            {demos.map((demo) => (
+              <button
+                key={demo.name}
+                type="button"
+                onClick={() => onReplay(demo.name, demo.claim)}
+                disabled={disabled}
+                className="flex flex-col gap-1 rounded-xl border border-line-soft bg-raised px-5 py-3 text-left transition hover:border-ink-faint disabled:opacity-40"
+              >
+                <span className="text-sm text-ink">{demo.claim}</span>
+                <span className="text-xs text-ink-faint">
+                  recorded · {demo.rounds} rounds
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="mt-14 w-full">
-        <p className="mb-4 text-xs tracking-[0.16em] text-white/30 uppercase">Try one</p>
+        <p className="mb-4 text-xs tracking-[0.16em] text-ink-faint uppercase">Try one</p>
         <div className="flex flex-col gap-2">
           {EXAMPLES.map((example) => (
             <button
@@ -80,7 +125,7 @@ export function ClaimInput({ onStart, disabled = false }: Props) {
               type="button"
               onClick={() => setClaim(example)}
               disabled={disabled}
-              className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-5 py-3 text-left text-sm text-white/60 transition hover:border-white/20 hover:text-white/90 disabled:opacity-40"
+              className="rounded-xl border border-line-soft bg-raised px-5 py-3 text-left text-sm text-ink-soft transition hover:border-ink-faint hover:text-ink disabled:opacity-40"
             >
               {example}
             </button>
