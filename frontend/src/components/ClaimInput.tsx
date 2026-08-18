@@ -44,7 +44,7 @@ export function ClaimInput({ onStart, onReplay, engine, disabled = false }: Prop
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-6 py-20">
       <p className="mb-3 text-xs font-medium tracking-[0.2em] text-ink-faint uppercase">
-        Adversarial AI Debate Engine
+        Devil&rsquo;s Advocate
       </p>
       <h1 className="mb-4 text-center text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
         This AI does not agree with you.

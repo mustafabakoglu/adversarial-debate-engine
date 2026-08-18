@@ -100,7 +100,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(
-    title="Adversarial AI Debate Engine",
+    title="Devil's Advocate",
     description="Two AI agents argue opposing sides of a claim; a third judges the argumentation.",
     version="0.2.0",
     lifespan=lifespan,

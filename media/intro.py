@@ -101,8 +101,8 @@ def intro(seconds: float = 7.0) -> None:
 
         # 0.10-0.30  eyebrow
         if t > 0.10:
-            centred(draw, 360, "ADVERSARIAL AI DEBATE ENGINE", eyebrow,
-                    fade(FAINT, ease((t - 0.10) / 0.20)), spacing=6)
+            centred(draw, 360, "DEVIL'S ADVOCATE", eyebrow,
+                    fade(FAINT, ease((t - 0.10) / 0.20)), spacing=8)
 
         # 0.22-0.55  headline, two lines rising into place
         for line_index, line in enumerate(("This AI does not agree", "with you.")):
@@ -364,8 +364,9 @@ def end_card(seconds: float = 6.0) -> None:
 
         if t > 0.58:
             amount = ease((t - 0.58) / 0.22)
-            centred(draw, 700, "OPEN SOURCE, MIT", small, fade(FAINT, amount), spacing=5)
-            centred(draw, 748, "github.com/mustafabakoglu/adversarial-debate-engine", url,
+            centred(draw, 686, "DEVIL'S ADVOCATE  ·  OPEN SOURCE, MIT", small,
+                    fade(FAINT, amount), spacing=5)
+            centred(draw, 734, "github.com/mustafabakoglu/adversarial-debate-engine", url,
                     fade(INK, amount))
 
         rule = ease(min(1.0, max(0.0, (t - 0.5) / 0.3)))

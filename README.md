@@ -1,4 +1,8 @@
-# Adversarial AI Debate Engine
+# Devil's Advocate
+
+*An adversarial AI debate engine: two agents argue opposite sides of your claim until a
+referee rules the disagreement finished, and a judge scores the argument rather than the
+answer.*
 
 Most AI assistants agree with you. Ask one whether your plan is good and it will
 find reasons it is good; frame a question and it will accept your framing. That
@@ -19,10 +23,22 @@ textbook prose, and the referee and the judge answer in it too. Submit in Englis
 and you get English; submit in Turkish, Spanish or Japanese and the whole debate,
 including the verdict, comes back in that language.
 
-## The two-minute version
+## Try it
 
-[**media/demo.mp4**](media/demo.mp4) — 2:55, a real debate captured from the running
-app, with the pipeline that produced it in [media/](media/README.md).
+| | |
+| --- | --- |
+| **[adversarial-debate-engine.onrender.com](https://adversarial-debate-engine.onrender.com/)** | The full thing: submit your own claim and watch it argued live, if a model key is configured on the instance. Free tier, so the first request after a quiet spell wakes the container. |
+| **[mustafabakoglu.github.io/adversarial-debate-engine](https://mustafabakoglu.github.io/adversarial-debate-engine/)** | The same app as static files. Recorded debates replay in full — referee calls, the judge's question, a challenge round — because a recording needs no key and no server. Nothing to wake up, nothing to run out. |
+
+The page checks `/api/health` once on load and says which of the two it is, rather than
+letting you submit a claim into nothing: no engine behind it, an engine with no key, or a
+working one.
+
+## The three-minute version
+
+[**media/demo.mp4**](media/demo.mp4) — a real debate captured from the running app,
+narrated, with an animated walk-through of how the four AI roles are wired. The pipeline
+that renders it is in [media/](media/README.md).
 
 ## How the debate is structured
 
