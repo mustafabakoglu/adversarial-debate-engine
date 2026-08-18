@@ -170,6 +170,7 @@ Set in `backend/.env`:
 | --- | --- | --- |
 | `MODEL_PROVIDER` | `mistral` | Which adapter to use: `mistral` or `anthropic`. |
 | `MODEL_API_KEY` | — | Required. `MISTRAL_API_KEY` / `ANTHROPIC_API_KEY` are accepted as fallbacks. |
+| `MODEL_API_KEYS` | — | Optional, comma-separated. The adapter rotates to the next key when one starts refusing. |
 | `MODEL_NAME` | provider default | `mistral-large-latest` or `claude-opus-5`. |
 | `DEBATER_EFFORT` | `medium` | Reasoning effort for the two debaters. Anthropic only. |
 | `JUDGE_EFFORT` | `high` | Reasoning effort for the judge, which does the hardest work. Anthropic only. |
@@ -197,6 +198,13 @@ prompt instead. Rate limiting also lives in the adapter, because free tiers need
 pacing that the debate protocol should not have to know about — `mistral` defaults
 to one call every 6 seconds, which is roughly what its free tier tolerates once a
 long debate is making twenty-plus calls.
+
+Keys are a ring rather than a single value. A free tier is a quota, and a quota runs
+out in the middle of a debate — so when a key starts returning 429 or is rejected
+outright, the adapter moves to the next one and retries immediately, because a fresh
+key answers now where an exhausted one would cost thirty seconds of backoff for the
+same refusal. With one key configured there is nowhere to rotate to and the backoff
+behaviour is exactly as before.
 
 ## API
 

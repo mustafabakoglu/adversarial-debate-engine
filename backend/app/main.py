@@ -76,7 +76,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         try:
             provider = build_provider(
                 config.MODEL_PROVIDER,
-                config.MODEL_API_KEY,
+                config.MODEL_API_KEYS,
                 config.MODEL_NAME,
                 config.REQUEST_MIN_INTERVAL,
             )
@@ -85,7 +85,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         else:
             engine = DebateEngine(provider)
             logger.info(
-                "debate engine ready (provider=%s model=%s)", engine.provider_name, engine.model
+                "debate engine ready (provider=%s model=%s keys=%d)",
+                engine.provider_name,
+                engine.model,
+                len(config.MODEL_API_KEYS),
             )
     app.state.engine = engine
     app.state.sessions = SessionStore(config.MAX_SESSIONS)

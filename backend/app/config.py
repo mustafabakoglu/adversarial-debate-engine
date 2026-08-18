@@ -16,11 +16,28 @@ MODEL_PROVIDER = _clean(os.getenv("MODEL_PROVIDER")) or "mistral"
 
 # MODEL_API_KEY is the documented name. The provider-native variables are
 # accepted as fallbacks so an existing environment keeps working.
-MODEL_API_KEY = (
-    _clean(os.getenv("MODEL_API_KEY"))
-    or _clean(os.getenv("MISTRAL_API_KEY"))
-    or _clean(os.getenv("ANTHROPIC_API_KEY"))
-)
+#
+# MODEL_API_KEYS takes a comma-separated list, because a free tier is a quota and a
+# quota runs out: the provider rotates to the next key when one starts refusing, so a
+# hosted demo does not die the moment several people try it at once.
+def _key_ring() -> list[str]:
+    keys: list[str] = []
+    for candidate in (
+        _clean(os.getenv("MODEL_API_KEY")),
+        _clean(os.getenv("MISTRAL_API_KEY")),
+        _clean(os.getenv("ANTHROPIC_API_KEY")),
+        *(part.strip() for part in _clean(os.getenv("MODEL_API_KEYS")).split(",")),
+    ):
+        if candidate and candidate not in keys:
+            keys.append(candidate)
+    return keys
+
+
+MODEL_API_KEYS = _key_ring()
+
+# The first key, kept as its own name because most of the app only needs to know
+# whether a provider can be built at all.
+MODEL_API_KEY = MODEL_API_KEYS[0] if MODEL_API_KEYS else ""
 
 # Left empty so providers.py can pick its own default per provider.
 MODEL_NAME = _clean(os.getenv("MODEL_NAME"))

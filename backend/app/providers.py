@@ -85,6 +85,41 @@ class Provider(Protocol):
     async def close(self) -> None: ...
 
 
+class KeyRing:
+    """The API keys, in order, with a pointer at whichever one is working.
+
+    A free tier is a quota, and a quota runs out mid-debate. Rotating is cheaper than
+    waiting: a fresh key usually answers immediately where the exhausted one would
+    have cost thirty seconds of backoff for the same 429. `rotate` reports whether
+    there was anywhere else to go, so callers fall back to waiting when there is not.
+    """
+
+    def __init__(self, keys: list[str]) -> None:
+        cleaned = [key.strip() for key in keys if key and key.strip()]
+        if not cleaned:
+            raise ProviderConfigError("no API key configured")
+        self._keys = cleaned
+        self._index = 0
+
+    def __len__(self) -> int:
+        return len(self._keys)
+
+    @property
+    def current(self) -> str:
+        return self._keys[self._index]
+
+    @property
+    def position(self) -> int:
+        """1-based, for log lines that should not contain the key itself."""
+        return self._index + 1
+
+    def rotate(self) -> bool:
+        if len(self._keys) < 2:
+            return False
+        self._index = (self._index + 1) % len(self._keys)
+        return True
+
+
 class RateLimiter:
     """Enforce a minimum interval between requests, across all callers."""
 
@@ -141,17 +176,27 @@ def _required_keys_instruction(schema: dict) -> str:
 class AnthropicProvider:
     name = "anthropic"
 
-    def __init__(self, api_key: str, model: str, min_interval: float) -> None:
+    def __init__(self, keys: list[str], model: str, min_interval: float) -> None:
         from anthropic import AsyncAnthropic
 
         self.model = model
-        self._client = AsyncAnthropic(api_key=api_key)
+        self._ring = KeyRing(keys)
+        self._factory = AsyncAnthropic
+        self._clients: dict[str, Any] = {}
         self._limiter = RateLimiter(min_interval)
         # Older SDK releases do not accept output_config; detected on first use.
         self._supports_output_config = True
 
+    @property
+    def _client(self) -> Any:
+        key = self._ring.current
+        if key not in self._clients:
+            self._clients[key] = self._factory(api_key=key)
+        return self._clients[key]
+
     async def close(self) -> None:
-        await self._client.close()
+        for client in self._clients.values():
+            await client.close()
 
     async def complete(
         self,
@@ -245,6 +290,9 @@ class AnthropicProvider:
                 last = exc
                 if attempt == MAX_ATTEMPTS:
                     break
+                if isinstance(exc, anthropic.RateLimitError) and self._ring.rotate():
+                    logger.warning("anthropic rate-limited; switching to key %d", self._ring.position)
+                    continue
                 delay = _backoff_delay(attempt, None)
                 logger.warning(
                     "anthropic call failed (%s); retrying in %.0fs", type(exc).__name__, delay
@@ -257,16 +305,19 @@ class MistralProvider:
     name = "mistral"
     endpoint = "https://api.mistral.ai/v1/chat/completions"
 
-    def __init__(self, api_key: str, model: str, min_interval: float) -> None:
+    def __init__(self, keys: list[str], model: str, min_interval: float) -> None:
         self.model = model
+        self._ring = KeyRing(keys)
         self._limiter = RateLimiter(min_interval)
+        # The key goes on the request rather than the client, so rotating one does not
+        # mean rebuilding a connection pool.
         self._client = httpx.AsyncClient(
             timeout=httpx.Timeout(180.0, connect=15.0),
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
+            headers={"Content-Type": "application/json"},
         )
+
+    def _auth(self) -> dict[str, str]:
+        return {"Authorization": f"Bearer {self._ring.current}"}
 
     async def close(self) -> None:
         await self._client.aclose()
@@ -338,22 +389,32 @@ class MistralProvider:
         last_detail = "unknown error"
         for attempt in range(1, MAX_ATTEMPTS + 1):
             await self._limiter.acquire()
-            async with self._client.stream("POST", self.endpoint, json=payload) as response:
+            async with self._client.stream(
+                "POST", self.endpoint, json=payload, headers=self._auth()
+            ) as response:
                 if response.status_code == 200:
                     async for fragment in self._read_sse(response):
                         yield fragment
                     return
 
                 body = (await response.aread()).decode("utf-8", "replace")
+                last_detail = f"HTTP {response.status_code}: {body[:200]}"
                 if response.status_code == 401:
+                    # A dead key is worth trying past; the last one is worth reporting.
+                    if self._ring.rotate():
+                        logger.warning("a key was rejected (401); switching to key %d", self._ring.position)
+                        continue
                     raise DebateError(
                         "The provider rejected the API key (401). Check MODEL_API_KEY in "
                         "backend/.env."
                     )
-                last_detail = f"HTTP {response.status_code}: {body[:200]}"
                 if response.status_code not in RETRY_STATUS:
                     raise DebateError(f"the provider rejected the request: {last_detail}")
                 retry_after = _parse_retry_after(response)
+
+            if response.status_code == 429 and self._ring.rotate():
+                logger.warning("rate-limited; switching to key %d", self._ring.position)
+                continue
 
             if attempt == MAX_ATTEMPTS:
                 break
@@ -393,23 +454,38 @@ class MistralProvider:
         for attempt in range(1, MAX_ATTEMPTS + 1):
             await self._limiter.acquire()
             retry_after: float | None = None
+            rotated = False
             try:
-                response = await self._client.post(self.endpoint, json=payload)
+                response = await self._client.post(
+                    self.endpoint, json=payload, headers=self._auth()
+                )
             except httpx.HTTPError as exc:
                 last_detail = str(exc)
             else:
                 if response.status_code == 200:
                     return response.json()
+                last_detail = f"HTTP {response.status_code}: {response.text[:200]}"
                 if response.status_code == 401:
+                    # A dead key is worth trying past; the last one is worth reporting.
+                    if self._ring.rotate():
+                        logger.warning(
+                            "a key was rejected (401); switching to key %d", self._ring.position
+                        )
+                        continue
                     raise DebateError(
                         "The provider rejected the API key (401). Check MODEL_API_KEY in "
                         "backend/.env."
                     )
-                last_detail = f"HTTP {response.status_code}: {response.text[:200]}"
                 if response.status_code not in RETRY_STATUS:
                     raise DebateError(f"the provider rejected the request: {last_detail}")
                 retry_after = _parse_retry_after(response)
+                # A fresh key beats thirty seconds of backoff on an exhausted one.
+                if response.status_code == 429 and self._ring.rotate():
+                    logger.warning("rate-limited; switching to key %d", self._ring.position)
+                    rotated = True
 
+            if rotated:
+                continue
             if attempt == MAX_ATTEMPTS:
                 break
             delay = _backoff_delay(attempt, retry_after)
@@ -423,18 +499,26 @@ class MistralProvider:
 
 
 def build_provider(
-    provider: str, api_key: str, model: str | None, min_interval: float | None = None
+    provider: str,
+    api_keys: str | list[str],
+    model: str | None,
+    min_interval: float | None = None,
 ) -> Provider:
-    """Construct the configured provider adapter."""
+    """Construct the configured provider adapter.
+
+    Accepts one key or several; with several, the adapter rotates when a key starts
+    refusing rather than waiting out a quota it cannot get back.
+    """
     key = provider.strip().lower()
     if key not in DEFAULT_MODELS:
         raise ProviderConfigError(
             f"unknown MODEL_PROVIDER {provider!r}; supported values are 'anthropic' and 'mistral'"
         )
 
+    keys = [api_keys] if isinstance(api_keys, str) else list(api_keys)
     resolved_model = (model or "").strip() or DEFAULT_MODELS[key]
     interval = DEFAULT_MIN_INTERVAL[key] if min_interval is None else min_interval
 
     if key == "anthropic":
-        return AnthropicProvider(api_key, resolved_model, interval)
-    return MistralProvider(api_key, resolved_model, interval)
+        return AnthropicProvider(keys, resolved_model, interval)
+    return MistralProvider(keys, resolved_model, interval)

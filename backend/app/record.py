@@ -28,7 +28,7 @@ async def record(name: str, claim: str) -> str:
     engine = DebateEngine(
         build_provider(
             config.MODEL_PROVIDER,
-            config.MODEL_API_KEY,
+            config.MODEL_API_KEYS,
             config.MODEL_NAME,
             config.REQUEST_MIN_INTERVAL,
         )
