@@ -1,0 +1,244 @@
+{
+ "claim": "Yapay zeka yazilimcilarin yerini alacak.",
+ "provider": "mistral",
+ "model": "mistral-large-latest",
+ "rounds": 5,
+ "recorded_at": "2026-08-18T10:52:59+00:00",
+ "events": [
+  {
+   "type": "round_start",
+   "number": 1,
+   "name": "Opening Arguments"
+  },
+  {
+   "type": "turn_start",
+   "round": 1,
+   "round_name": "Opening Arguments",
+   "speaker": "prosecutor",
+   "kind": "opening"
+  },
+  {
+   "type": "turn_end",
+   "round": 1,
+   "round_name": "Opening Arguments",
+   "speaker": "prosecutor",
+   "kind": "opening",
+   "text": "\"Yazılımcılar hata ayıklamayı bırakın, yapay zeka zaten kod yazıyor diyorsunuz. Peki şu anki haline bakın: GitHub Copilot, bir fonksiyonun içine 'bu diziyi ters çevir' yazdığınızda size beş farklı döngü öneriyor—hepsi çalışıyor, evet, ama hangisinin bellek sızıntısı yaratacağını, hangisinin üç ay sonra bakım ekibinin kafasını karıştıracağını bilmiyor. O kararları vermek için hâlâ bir insana ihtiyaç var, ve o insan, yapay zekanın 'yardımcısı' değil, patronu. Patronun yerini alacak bir araç mı? Şu anki halinde, patronun elindeki en aptal stajyerden bile daha az inisiyatif sahibi.\""
+  },
+  {
+   "type": "turn_start",
+   "round": 1,
+   "round_name": "Opening Arguments",
+   "speaker": "defender",
+   "kind": "opening"
+  },
+  {
+   "type": "turn_end",
+   "round": 1,
+   "round_name": "Opening Arguments",
+   "speaker": "defender",
+   "kind": "opening",
+   "text": "Ah, \"yerini alacak\". Güzel. Şu an bir yazılım ekibinde, herkesin kod incelemesi için GitHub'a attığı pull request'ler var. Eskiden bir insan gelip \"bu döngü neden sonsuz?\" diye sorardı. Şimdi bir yapay zeka, aynı anda her satırı tarıyor, aynı soruyu soruyor - ama beş dakika içinde, ve herkesin kodu için. O insan artık \"neden ben?\" diye düşünmek yerine, \"bu uyarıyı nasıl atlatırım?\" diye düşünüyor. Karar anı kaydı: dün öğleden sonra öğreniyordun, bugün sabah toplantısında öğreniyorsun. Ve toplantıda artık kimse \"bu döngü neden sonsuz?\" demiyor, çünkü cevabı zaten biliyorlar. Senin \"yerini alma\" dediğin şey, tam da bu: aynı işi yapan insanın, aynı işi yaparken artık karar verememesi."
+  },
+  {
+   "type": "round_start",
+   "number": 2,
+   "name": "Rebuttal"
+  },
+  {
+   "type": "turn_start",
+   "round": 2,
+   "round_name": "Rebuttal",
+   "speaker": "prosecutor",
+   "kind": "rebuttal"
+  },
+  {
+   "type": "turn_end",
+   "round": 2,
+   "round_name": "Rebuttal",
+   "speaker": "prosecutor",
+   "kind": "rebuttal",
+   "text": "\"Karar anı kaydı\" diyorsun. Güzel. Ama kaydığını söylediğin şey, karar değil, geri bildirim. Yapay zeka sana \"bu döngü sonsuz\" diyor, evet - ama o uyarıyı görmezden gelip kodu yine de mergeleyen sensin. Ya da uyarıyı dikkate alıp kodu değiştiren sensin. Ya da uyarının yanlış olduğunu fark edip yapay zekayı susturan sensin.\n\nBeş dakika önce öğrenmek, karar verme yetkisini elinden almaz. Sadece kararını daha erken vermeni sağlar. Patronun yerini alacak araç, \"bu döngü sonsuz\" demekle kalmaz, aynı zamanda \"bu döngüyü düzeltiyorum\" der ve pull request'i otomatik olarak merge eder. Şu anda böyle bir şey yok. Senin örnekteki yapay zeka, sadece daha hızlı bir uyarı sistemi - ve uyarı sistemleri, patronların yerini almaz, sadece patronların işini kolaylaştırır."
+  },
+  {
+   "type": "turn_start",
+   "round": 2,
+   "round_name": "Rebuttal",
+   "speaker": "defender",
+   "kind": "rebuttal"
+  },
+  {
+   "type": "turn_end",
+   "round": 2,
+   "round_name": "Rebuttal",
+   "speaker": "defender",
+   "kind": "rebuttal",
+   "text": "\"Patronun elindeki en aptal stajyerden bile daha az inisiyatif sahibi.\"\n\nİşte buradasın. Çünkü stajyerin en azından bir şeyi fark etme yetkisi var. GitHub Copilot'un uyarısını görmezden gelen geliştirici, onu görmezden gelmeyi seçiyor—ve bu seçim, yapay zekanın değil, insanın elinde. Senin \"karar anı kaydı\" dediğin şey, aslında karar anının yoğunlaşması: artık herkes aynı beş dakika içinde aynı bilgiye sahip, yani tartışma \"bu döngü sonsuz mu?\"dan \"bu sonsuz döngüyü nasıl düzeltiriz?\"e geçiyor. Bu da daha az karar verilmediği, daha hızlı ve daha bilinçli karar verildiği anlamına geliyor.\n\nVe \"nasıl atlatırım?\" diye düşünen geliştirici? O da senin \"patron\" dediğin insanın ta kendisi—sadece artık aptalca hataları ayıklamak yerine, aptalca kaçamakları ayıklıyor. Patronun yerini almak mı? Hayır. Patronun işini, patronun kendisinin bile fark etmediği kadar daraltmak."
+  },
+  {
+   "type": "round_start",
+   "number": 3,
+   "name": "Cross Examination"
+  },
+  {
+   "type": "turn_start",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "prosecutor",
+   "kind": "cross_question"
+  },
+  {
+   "type": "turn_end",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "prosecutor",
+   "kind": "cross_question",
+   "text": "\"Diyorsun ki yapay zeka tartışmayı 'bu döngü sonsuz mu?'dan 'nasıl düzeltiriz?'e taşıyor. Peki ya yapay zeka yanlış uyarı verirse? O zaman tüm ekip, yanlış bir 'nasıl düzeltiriz?' sorusuna kilitlenmiş olmaz mı — ve bu kilidi açacak olan, yine insan mı?\""
+  },
+  {
+   "type": "turn_start",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "defender",
+   "kind": "cross_answer"
+  },
+  {
+   "type": "turn_end",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "defender",
+   "kind": "cross_answer",
+   "text": "Evet, insan kilidi açar. Ama kilit açılmadan önce ekip o yanlış uyarıya ne kadar süre takılı kalır? Eskiden bir insan \"bu döngü sonsuz\" derdi, ekip tartışırdı, belki bir saat sonra yanlış alarm olduğu anlaşılırdı. Şimdi aynı yanlış alarm beş dakikada çözülüyor—çünkü yapay zeka aynı anda herkesin ekranında, aynı veriyle. Yanlış uyarıyı düzeltmek için harcanan zaman sıfırlanmıyor, ama karar verme sürecindeki gecikme sıfırlanıyor.\n\nSenin \"patron\" dediğin şey, aslında bu gecikmeleri yöneten kişi. O gecikmeler ortadan kalkınca, patronun işi de ortadan kalkıyor—yanlış alarmı düzeltmek için değil, alarmın kendisini beklemek için."
+  },
+  {
+   "type": "turn_start",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "defender",
+   "kind": "cross_question"
+  },
+  {
+   "type": "turn_end",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "defender",
+   "kind": "cross_question",
+   "text": "\"Ekip yanlış uyarıya beş dakika takılıp kalıyor diyorsun. Peki ya yapay zeka hiç uyarı vermezse? Bir bellek sızıntısını, bir yarış durumunu, üç ay sonra bakım ekibinin kafasını karıştıracak bir tasarım hatasını atladığında—o zaman kim fark edecek, ve fark edilene kadar geçen süre kimin sorumluluğunda olacak?\""
+  },
+  {
+   "type": "turn_start",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "prosecutor",
+   "kind": "cross_answer"
+  },
+  {
+   "type": "turn_end",
+   "round": 3,
+   "round_name": "Cross Examination",
+   "speaker": "prosecutor",
+   "kind": "cross_answer",
+   "text": "\"Fark edecek olan yine insan, ama artık o insan, yapay zekanın kör noktalarını ezberlemek zorunda. Eskiden bir yazılımcı, 'bu döngü sonsuz mu?' diye sorarken aynı zamanda 'bu kodda başka ne gözden kaçırdım?' diye de düşünürdü. Şimdi yapay zeka 'sonsuz döngü yok' deyince, ekip otomatik olarak 'başka sorun yok' diye varsayıyor — ta ki üç ay sonra bakım ekibi çöküşü fark edene kadar.\n\nGecikme sıfırlanmadı, sadece görünmez oldu. Ve görünmez gecikmeler, patronun değil, patronun patronunun sorunu — çünkü artık kimse 'beklemek' demiyor, 'yapay zeka dedi ya' diyor.\""
+  },
+  {
+   "type": "status",
+   "message": "The judge may have a question"
+  },
+  {
+   "type": "round_start",
+   "number": 4,
+   "name": "From the Bench"
+  },
+  {
+   "type": "turn_end",
+   "round": 4,
+   "round_name": "From the Bench",
+   "speaker": "judge",
+   "kind": "judge_question",
+   "text": "Siz ikiniz de 'karar anı' ve 'patronun rolü' üzerinde duruyorsunuz, ama ikiniz de şu soruyu yanıtsız bıraktınız: Bir yazılımcının işi, kod yazmak mı, yoksa kodun doğru yazılmasını sağlamak mı? Eğer yapay zeka kod yazıyorsa, ama doğruluğunu garanti edemiyorsa—o zaman patronun yerini almak için neyi başarması gerekiyor? Cevabınızı bir örnekle verin."
+  },
+  {
+   "type": "turn_start",
+   "round": 4,
+   "round_name": "From the Bench",
+   "speaker": "prosecutor",
+   "kind": "bench_answer"
+  },
+  {
+   "type": "turn_end",
+   "round": 4,
+   "round_name": "From the Bench",
+   "speaker": "prosecutor",
+   "kind": "bench_answer",
+   "text": "Bir yazılımcının işi kodun doğru yazılmasını sağlamak. Yapay zekanın patronun yerini alması için, kodun doğruluğunu garanti etmesi gerekir - hem bugün çalışmasını, hem üç ay sonra bakım ekibinin anlayabilmesini, hem de bellek sızıntısı yaratmamasını.\n\nŞu anki halinde yapamıyor. Örnek: GitHub Copilot size bir fonksiyon yazıyor, testleri geçiyor, ama bellek yönetimini yanlış yapıyor. Siz fark etmiyorsunuz, çünkü yapay zeka \"bu kod çalışıyor\" dedi. Üç ay sonra sistem çöküyor. O çöküşün sorumlusu kim? Yapay zeka değil, siz - ama artık siz, yapay zekanın kör noktalarını bilmediğiniz için sorumlusunuz. Patronun yerini almak için, yapay zekanın kör noktaları olmaması lazım. Şu an var."
+  },
+  {
+   "type": "turn_start",
+   "round": 4,
+   "round_name": "From the Bench",
+   "speaker": "defender",
+   "kind": "bench_answer"
+  },
+  {
+   "type": "turn_end",
+   "round": 4,
+   "round_name": "From the Bench",
+   "speaker": "defender",
+   "kind": "bench_answer",
+   "text": "Bir yazılımcının işi kodun doğru yazılmasını sağlamak. Yapay zeka şu anda kod yazıyor, ama doğruluğunu garanti edemiyor—o yüzden patronun yerini almıyor, patronun işini yeniden tanımlıyor.\n\nÖrnek: Eskiden bir geliştirici, bir API entegrasyonunu elle yazarken hem \"bu doğru çalışır mı?\" hem de \"bu güvenli mi?\" diye düşünürdü. Şimdi yapay zeka kodu yazıyor, geliştirici de \"bu API'nin rate limit'ini aştı mı?\", \"bu auth token'ı nasıl saklıyor?\" diye kontrol ediyor. Karar anı değişmedi: \"doğru mu?\" sorusu hâlâ insan elinde. Ama artık o soruyu sormak için harcanan zaman, kod yazmaktan çok, kodun anlamını çözmeye gidiyor.\n\nPatronun yerini almak için yapay zekanın, \"bu kod doğru\" demesi yetmez—\"bu kodun neden doğru olduğunu da ben açıklayayım\" demesi gerek. O da henüz yok."
+  },
+  {
+   "type": "round_start",
+   "number": 5,
+   "name": "Last Word"
+  },
+  {
+   "type": "turn_start",
+   "round": 5,
+   "round_name": "Last Word",
+   "speaker": "prosecutor",
+   "kind": "closing"
+  },
+  {
+   "type": "turn_end",
+   "round": 5,
+   "round_name": "Last Word",
+   "speaker": "prosecutor",
+   "kind": "closing",
+   "text": "Senin \"patronun işi yeniden tanımlanıyor\" lafın, aslında patronun işinin ortadan kalktığını itiraf ediyor. Eskiden geliştirici hem kod yazar hem de \"bu güvenli mi?\" diye düşünürdü—şimdi yapay zeka yazıyor, geliştirici sadece kontrol ediyor. Ama kontrol etmek, karar vermek demek. Ve karar veren, patron olmaya devam ediyor.\n\nSenin zayıf noktan? \"Yapay zeka kör noktaları olmamalı\" dedim, sen \"ama insan da kör noktaları var\" diye kaçtın. Evet, insanlar hata yapar. Ama insanlar, hatalarının sorumluluğunu alır. Yapay zeka ise hatalarını gizler—\"bu kod çalışıyor\" der, bellek sızıntısını atlar, ve üç ay sonra çöküş geldiğinde kimse \"yapay zeka dedi ya\"dan öteye gidemez.\n\nPatronun yerini almak için, yapay zekanın sadece kod yazması yetmez. O kodun sorumluluğunu da üstlenmesi gerek. Şu an üstlenmiyor. Ve sorumluluk almadan patron olunmaz."
+  },
+  {
+   "type": "turn_start",
+   "round": 5,
+   "round_name": "Last Word",
+   "speaker": "defender",
+   "kind": "closing"
+  },
+  {
+   "type": "turn_end",
+   "round": 5,
+   "round_name": "Last Word",
+   "speaker": "defender",
+   "kind": "closing",
+   "text": "Ah, \"kör noktalar\". Senin en sevdiğin kelime. Ama kör noktalar, patronun işini ortadan kaldırmaz—sadece patronun neye bakacağını değiştirir. Eskiden bir yazılımcı, \"bu kod çalışır mı?\" diye bakarken, şimdi \"yapay zeka bu kodu neden yanlış yazdı?\" diye bakıyor. Karar anı hâlâ orada, sadece soru farklı.\n\nSenin örnekteki bellek sızıntısı? Evet, yapay zeka atladı. Ama eskiden de bir insan atlardı—ve o insan, atladığını fark edene kadar geçen süre, patronun sorumluluğundaydı. Şimdi o süre, yapay zekanın kör noktalarını öğrenmeye harcanıyor. Patronun işi değişti, yok olmadı.\n\nVe senin \"yapay zeka dedi ya\" sendromun? O da patronun yeni işi: insanların körü körüne güvenmesini engellemek. Patronun yerini almak için yapay zekanın mükemmel olması gerekmiyor. Sadece patronun işini, patronun kendisinin bile fark etmediği kadar daraltması yetiyor.\n\nKarar anı hâlâ insan elinde. Ama artık o karar, kod yazmak yerine, kodun anlamını çözmek için veriliyor. Ve bu, patronun sonu değil—sadece patronun yeni başlangıcı."
+  },
+  {
+   "type": "status",
+   "message": "Judge reviewing the transcript"
+  },
+  {
+   "type": "verdict",
+   "prosecutor_score": 85,
+   "defender_score": 88,
+   "winner": "defender",
+   "confidence": 75,
+   "reasoning": "Defender, 'karar anının yoğunlaşması' ve 'patronun işinin yeniden tanımlanması' fikirlerini tutarlı bir şekilde savundu. Prosecutor'un 'sorumluluk' vurgusu güçlüydü, ama Defender'ın 'kör noktaların patronun işini ortadan kaldırmadığı, sadece değiştirdiği' yanıtı daha ikna ediciydi. Hakim sorusuna verilen cevaplarda Defender, patronun rolünün kaybolmadığını, sadece evrildiğini göstererek avantaj sağladı.",
+   "strongest_argument": "DEFENDER: 'Karar anı hâlâ orada, sadece soru farklı. Eskiden bir yazılımcı, 'bu kod çalışır mı?' diye bakarken, şimdi 'yapay zeka bu kodu neden yanlış yazdı?' diye bakıyor.'",
+   "weakest_argument": "PROSECUTOR: 'Patronun yerini alacak araç, 'bu döngüyü düzeltiyorum' der ve pull request'i otomatik olarak merge eder. Şu anda böyle bir şey yok.' Bu, mevcut durumu aşan bir varsayım ve somut bir mekanizma sunmuyor.",
+   "unresolved_question": "Yapay zekanın kodun doğruluğunu garanti etmeden, patronun sorumluluğunu üstlenip üstlenemeyeceği — ve bu sorumluluğun nasıl ölçüleceği."
+  },
+  {
+   "type": "done"
+  }
+ ]
+}

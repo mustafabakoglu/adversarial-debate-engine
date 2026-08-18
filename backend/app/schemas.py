@@ -4,10 +4,23 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from .config import MAX_CLAIM_LENGTH, MIN_CLAIM_LENGTH
+from .config import MAX_ARGUMENT_LENGTH, MAX_CLAIM_LENGTH, MIN_CLAIM_LENGTH
 
-Speaker = Literal["prosecutor", "defender"]
-TurnKind = Literal["opening", "rebuttal", "cross_question", "cross_answer", "closing"]
+# "user" appears only in challenge rounds, where the person who submitted the
+# claim argues back. They are never scored — see the judge prompt.
+Speaker = Literal["prosecutor", "defender", "user", "judge"]
+TurnKind = Literal[
+    "opening",
+    "rebuttal",
+    "cross_question",
+    "cross_answer",
+    "clash",
+    "judge_question",
+    "bench_answer",
+    "closing",
+    "user_argument",
+    "challenge_response",
+]
 Winner = Literal["prosecutor", "defender", "draw"]
 
 
@@ -23,6 +36,22 @@ class DebateRequest(BaseModel):
         if len(claim) > MAX_CLAIM_LENGTH:
             raise ValueError(f"claim must be at most {MAX_CLAIM_LENGTH} characters")
         return claim
+
+
+class ChallengeRequest(BaseModel):
+    """A counter-argument from the person who submitted the claim."""
+
+    argument: str = Field(..., description="The user's own argument against the verdict.")
+
+    @field_validator("argument")
+    @classmethod
+    def _validate_argument(cls, value: str) -> str:
+        argument = " ".join(value.split())
+        if len(argument) < MIN_CLAIM_LENGTH:
+            raise ValueError(f"argument must be at least {MIN_CLAIM_LENGTH} characters")
+        if len(argument) > MAX_ARGUMENT_LENGTH:
+            raise ValueError(f"argument must be at most {MAX_ARGUMENT_LENGTH} characters")
+        return argument
 
 
 class Turn(BaseModel):
@@ -115,3 +144,70 @@ VERDICT_JSON_SCHEMA: dict = {
     ],
     "additionalProperties": False,
 }
+
+
+# The referee's decision after each open-clash round. Same structured-output
+# constraints as the verdict: no numeric ranges, additionalProperties false.
+REFEREE_JSON_SCHEMA: dict = {
+    "type": "object",
+    "properties": {
+        "resolved": {
+            "type": "boolean",
+            "description": "True if the disagreement is exhausted and the debate should be closed.",
+        },
+        "tension": {
+            "type": "string",
+            "description": (
+                "If not resolved, the one specific thing they are disagreeing about right now, "
+                "as a single sentence in the language of the debate. Empty if resolved."
+            ),
+        },
+        "note": {
+            "type": "string",
+            "description": (
+                "One short sentence for the audience explaining why the debate continues or "
+                "stops, in the language of the debate."
+            ),
+        },
+    },
+    "required": ["resolved", "tension", "note"],
+    "additionalProperties": False,
+}
+
+
+class RefereeDecision(BaseModel):
+    resolved: bool
+    tension: str
+    note: str
+
+
+# The judge's optional question before the closing statements.
+BENCH_JSON_SCHEMA: dict = {
+    "type": "object",
+    "properties": {
+        "ask": {
+            "type": "boolean",
+            "description": "True only if the answer would actually change how you score this.",
+        },
+        "target": {
+            "type": "string",
+            "enum": ["prosecutor", "defender", "both"],
+            "description": "Who has to answer. Empty of meaning when ask is false.",
+        },
+        "question": {
+            "type": "string",
+            "description": (
+                "The question, in the language of the debate, with at most two sentences of "
+                "framing. Empty if ask is false."
+            ),
+        },
+    },
+    "required": ["ask", "target", "question"],
+    "additionalProperties": False,
+}
+
+
+class BenchQuestion(BaseModel):
+    ask: bool
+    target: Literal["prosecutor", "defender", "both"]
+    question: str

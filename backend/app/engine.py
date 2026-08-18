@@ -1,28 +1,48 @@
 """Debate orchestration.
 
-The engine runs a fixed four-round protocol and then a verdict:
+The engine runs a fixed opening, then as many rounds as the argument earns:
 
-    Round 1  Opening arguments      both sides, in parallel, neither sees the other
-    Round 2  Rebuttal               both sides, in parallel, each answers the opening
-    Round 3  Cross examination      sequential: P asks -> D answers -> D asks -> P answers
-    Round 4  Closing arguments      both sides, in parallel, full transcript visible
-    Verdict  Judge                  structured output
+    Round 1   Opening arguments     each side writes without seeing the other
+    Round 2   Rebuttal              each side must take the opening apart
+    Round 3   Cross examination     P asks -> D answers -> D asks -> P answers
+    Round 4+  Open clash            only while the referee says it is still live
+    Bench     Judge's question      optional: the judge asks, they answer
+    Last      Last word             closing statements, full transcript visible
+    Verdict   Judge                 structured output
+    Then      Challenge             the user argues back; both sides must answer
+                                    them specifically, then a fresh verdict
 
-`run` is an async generator of events so the same code path serves both the
-streaming endpoint and the plain POST endpoint.
+The number of rounds is not fixed, and that is the point. After cross examination
+a referee reads the transcript and decides whether the disagreement is exhausted
+or has merely moved onto a sharper point; if it is still live, both sides get
+another round aimed at that exact tension, and the referee looks again. A debate
+that resolves quickly closes in four rounds; one where neither side will give way
+runs to MAX_DEBATE_ROUNDS.
+
+`run` and `challenge` are async generators of events, so the same code path serves
+the streaming endpoint and the plain POST endpoint.
+
+Rounds 1, 2 and the last word are logically simultaneous - neither side may react
+to the other - and that is enforced by controlling *what transcript each side can
+see*, not by issuing the calls concurrently. Clash rounds are the opposite: the
+second speaker must see what was just said, because answering it is the whole
+instruction. Turns are always produced one at a time, so the stream reads the way
+an exchange reads.
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
-from typing import Any, AsyncIterator
-
-from anthropic import AsyncAnthropic
+from typing import Any, AsyncIterator, Iterable
 
 from . import config
+from .errors import DebateError
 from .prompts import (
+    BENCH_ANSWER_INSTRUCTION,
+    BENCH_INSTRUCTION,
+    BENCH_SYSTEM,
+    CLASH_INSTRUCTION,
     CLOSING_INSTRUCTION,
     CROSS_ANSWER_INSTRUCTION,
     CROSS_QUESTION_INSTRUCTION,
@@ -31,35 +51,38 @@ from .prompts import (
     OPENING_INSTRUCTION,
     PROSECUTOR_SYSTEM,
     REBUTTAL_INSTRUCTION,
+    REFEREE_INSTRUCTION,
+    REFEREE_SYSTEM,
+    USER_CHALLENGE_INSTRUCTION,
 )
-from .schemas import VERDICT_JSON_SCHEMA, Round, Turn, Verdict
+from .providers import Provider
+from .schemas import (
+    BENCH_JSON_SCHEMA,
+    REFEREE_JSON_SCHEMA,
+    VERDICT_JSON_SCHEMA,
+    BenchQuestion,
+    RefereeDecision,
+    Round,
+    Turn,
+    Verdict,
+)
 
 logger = logging.getLogger(__name__)
 
-ROUND_NAMES = {
-    1: "Opening Arguments",
-    2: "Rebuttal",
-    3: "Cross Examination",
-    4: "Final Arguments",
+OPENING_ROUND_NAME = "Opening Arguments"
+REBUTTAL_ROUND_NAME = "Rebuttal"
+CROSS_ROUND_NAME = "Cross Examination"
+BENCH_ROUND_NAME = "From the Bench"
+CLOSING_ROUND_NAME = "Last Word"
+
+SPEAKER_LABEL = {
+    "prosecutor": "PROSECUTOR",
+    "defender": "DEFENDER",
+    "user": "THE PERSON WHO MADE THE CLAIM",
+    "judge": "THE JUDGE",
 }
 
-SPEAKER_LABEL = {"prosecutor": "PROSECUTOR", "defender": "DEFENDER"}
-
 SYSTEM_FOR = {"prosecutor": PROSECUTOR_SYSTEM, "defender": DEFENDER_SYSTEM}
-
-
-class DebateError(RuntimeError):
-    """Raised when the debate cannot be completed."""
-
-
-class ModelRefusal(DebateError):
-    """The model declined to produce a turn."""
-
-
-def _extract_text(message: Any) -> str:
-    """Collect the text blocks of a response, ignoring thinking blocks."""
-    parts = [block.text for block in message.content if getattr(block, "type", None) == "text"]
-    return "".join(parts).strip()
 
 
 def _loads_lenient(raw: str) -> dict:
@@ -77,8 +100,19 @@ def _loads_lenient(raw: str) -> dict:
     except json.JSONDecodeError:
         start, end = text.find("{"), text.rfind("}")
         if start == -1 or end <= start:
-            raise DebateError("the judge did not return parseable JSON")
+            raise DebateError("the model did not return parseable JSON")
         return json.loads(text[start : end + 1])
+
+
+def _plain(text: str) -> str:
+    """Strip the markdown emphasis the models are told not to use.
+
+    A prompt rule gets obeyed most of the time, and "most of the time" is not good
+    enough for something that shows up as literal asterisks in the middle of a
+    sentence. Deleting the character costs nothing: the debaters are speaking, so
+    an asterisk never carries meaning here.
+    """
+    return text.replace("*", "")
 
 
 def _clamp(value: Any, low: int = 0, high: int = 100, default: int = 50) -> int:
@@ -89,55 +123,24 @@ def _clamp(value: Any, low: int = 0, high: int = 100, default: int = 50) -> int:
 
 
 class DebateEngine:
-    def __init__(self, api_key: str, model: str) -> None:
-        self._client = AsyncAnthropic(api_key=api_key)
-        self._model = model
-        # Older SDK releases do not accept output_config; detected on first use.
-        self._supports_output_config = True
+    def __init__(self, provider: Provider) -> None:
+        self._provider = provider
+
+    @property
+    def provider_name(self) -> str:
+        return self._provider.name
+
+    @property
+    def model(self) -> str:
+        return self._provider.model
 
     async def close(self) -> None:
-        await self._client.close()
-
-    # -- model plumbing ----------------------------------------------------
-
-    async def _create(self, **params: Any) -> Any:
-        """Call the Messages API, degrading gracefully on an older SDK."""
-        if not self._supports_output_config:
-            params.pop("output_config", None)
-        try:
-            return await self._client.messages.create(**params)
-        except TypeError as exc:
-            if "output_config" not in params or "output_config" not in str(exc):
-                raise
-            logger.warning("installed anthropic SDK rejects output_config; continuing without it")
-            self._supports_output_config = False
-            params.pop("output_config", None)
-            return await self._client.messages.create(**params)
-
-    async def _speak(self, speaker: str, context: str) -> str:
-        message = await self._create(
-            model=self._model,
-            max_tokens=config.DEBATER_MAX_TOKENS,
-            system=SYSTEM_FOR[speaker],
-            output_config={"effort": config.DEBATER_EFFORT},
-            messages=[{"role": "user", "content": context}],
-        )
-        if message.stop_reason == "refusal":
-            raise ModelRefusal(
-                "The model declined to argue this claim. Try phrasing it as a debatable "
-                "proposition rather than a request about a restricted topic."
-            )
-        text = _extract_text(message)
-        if not text:
-            raise DebateError(SPEAKER_LABEL[speaker] + " returned an empty turn")
-        return text
+        await self._provider.close()
 
     # -- context building --------------------------------------------------
 
     @staticmethod
-    def _render_transcript(turns: list[Turn]) -> str:
-        if not turns:
-            return "(no turns yet)"
+    def _render_transcript(turns: Iterable[Turn]) -> str:
         lines: list[str] = []
         for turn in turns:
             lines.append(
@@ -147,9 +150,9 @@ class DebateEngine:
             )
             lines.append(turn.text)
             lines.append("")
-        return "\n".join(lines).strip()
+        return "\n".join(lines).strip() or "(no turns yet)"
 
-    def _context(self, claim: str, turns: list[Turn], instruction: str) -> str:
+    def _context(self, claim: str, turns: Iterable[Turn], instruction: str) -> str:
         return (
             "CLAIM UNDER DEBATE:\n"
             + claim
@@ -159,38 +162,127 @@ class DebateEngine:
             + instruction
         )
 
-    # -- rounds ------------------------------------------------------------
+    # -- streaming a single turn -------------------------------------------
 
-    async def _parallel_round(
+    async def _stream_turn(
         self,
+        *,
         claim: str,
-        number: int,
-        instruction: str,
-        kind: str,
         visible: list[Turn],
-    ) -> list[Turn]:
-        """Both sides speak from the same visible transcript, concurrently."""
-        context = self._context(claim, visible, instruction)
-        prosecutor_text, defender_text = await asyncio.gather(
-            self._speak("prosecutor", context),
-            self._speak("defender", context),
+        speaker: str,
+        kind: str,
+        number: int,
+        name: str,
+        instruction: str,
+    ) -> AsyncIterator[dict]:
+        """Emit turn_start, a run of turn_delta events, then turn_end."""
+        yield {
+            "type": "turn_start",
+            "round": number,
+            "round_name": name,
+            "speaker": speaker,
+            "kind": kind,
+        }
+
+        chunks: list[str] = []
+        async for raw_fragment in self._provider.stream(
+            system=SYSTEM_FOR[speaker],
+            user=self._context(claim, visible, instruction),
+            max_tokens=config.DEBATER_MAX_TOKENS,
+            effort=config.DEBATER_EFFORT,
+        ):
+            fragment = _plain(raw_fragment)
+            if not fragment:
+                continue
+            chunks.append(fragment)
+            yield {"type": "turn_delta", "text": fragment}
+
+        text = "".join(chunks).strip()
+        if not text:
+            raise DebateError(SPEAKER_LABEL[speaker] + " returned an empty turn")
+
+        turn = Turn(
+            round=number,
+            round_name=name,
+            speaker=speaker,  # type: ignore[arg-type]
+            kind=kind,  # type: ignore[arg-type]
+            text=text,
         )
-        return [
-            Turn(
-                round=number,
-                round_name=ROUND_NAMES[number],
-                speaker="prosecutor",
-                kind=kind,  # type: ignore[arg-type]
-                text=prosecutor_text,
-            ),
-            Turn(
-                round=number,
-                round_name=ROUND_NAMES[number],
-                speaker="defender",
-                kind=kind,  # type: ignore[arg-type]
-                text=defender_text,
-            ),
-        ]
+        yield {"type": "turn_end", **turn.model_dump()}
+
+    # -- referee -----------------------------------------------------------
+
+    async def _referee(self, claim: str, turns: list[Turn], rounds_left: int) -> RefereeDecision:
+        """Decide whether the debate still has somewhere to go."""
+        context = (
+            "CLAIM UNDER DEBATE:\n"
+            + claim
+            + "\n\nTRANSCRIPT SO FAR:\n"
+            + self._render_transcript(turns)
+            + f"\n\nRounds still available if you continue: {rounds_left}."
+            + "\n\nYOUR TASK:\n"
+            + REFEREE_INSTRUCTION
+        )
+        try:
+            raw = await self._provider.complete(
+                system=REFEREE_SYSTEM,
+                user=context,
+                max_tokens=config.REFEREE_MAX_TOKENS,
+                effort=config.REFEREE_EFFORT,
+                json_schema=REFEREE_JSON_SCHEMA,
+            )
+            data = _loads_lenient(raw)
+        except DebateError:
+            # The referee is a pacing decision, not the product. If it fails, close
+            # the debate rather than losing a transcript the reader can already see.
+            logger.warning("referee call failed; closing the debate", exc_info=True)
+            return RefereeDecision(resolved=True, tension="", note="")
+
+        tension = _plain(str(data.get("tension") or "")).strip()
+        resolved = bool(data.get("resolved")) or not tension
+        return RefereeDecision(
+            resolved=resolved,
+            tension=tension,
+            note=_plain(str(data.get("note") or "")).strip(),
+        )
+
+    # -- the bench ---------------------------------------------------------
+
+    async def _bench(self, claim: str, turns: list[Turn]) -> BenchQuestion:
+        """Ask the judge whether it wants anything before the closing statements."""
+        context = (
+            "CLAIM UNDER DEBATE:\n"
+            + claim
+            + "\n\nTRANSCRIPT SO FAR:\n"
+            + self._render_transcript(turns)
+            + "\n\nYOUR TASK:\n"
+            + BENCH_INSTRUCTION
+        )
+        try:
+            raw = await self._provider.complete(
+                system=BENCH_SYSTEM,
+                user=context,
+                max_tokens=config.REFEREE_MAX_TOKENS,
+                effort=config.JUDGE_EFFORT,
+                json_schema=BENCH_JSON_SCHEMA,
+            )
+            data = _loads_lenient(raw)
+        except DebateError:
+            # Optional by design, so a failure here costs the debate nothing.
+            logger.warning("bench call failed; skipping the judge's question", exc_info=True)
+            return BenchQuestion(ask=False, target="both", question="")
+
+        question = _plain(str(data.get("question") or "")).strip()
+        target = data.get("target")
+        if target not in ("prosecutor", "defender", "both"):
+            target = "both"
+        return BenchQuestion(
+            ask=bool(data.get("ask")) and bool(question),
+            target=target,  # type: ignore[arg-type]
+            question=question,
+        )
+
+    # -- verdict -----------------------------------------------------------
 
     async def _judge(self, claim: str, turns: list[Turn]) -> Verdict:
         context = (
@@ -200,20 +292,14 @@ class DebateEngine:
             + self._render_transcript(turns)
             + "\n\nYOUR TASK:\nScore both sides and return the verdict."
         )
-        message = await self._create(
-            model=self._model,
-            max_tokens=config.JUDGE_MAX_TOKENS,
+        raw = await self._provider.complete(
             system=JUDGE_SYSTEM,
-            output_config={
-                "effort": config.JUDGE_EFFORT,
-                "format": {"type": "json_schema", "schema": VERDICT_JSON_SCHEMA},
-            },
-            messages=[{"role": "user", "content": context}],
+            user=context,
+            max_tokens=config.JUDGE_MAX_TOKENS,
+            effort=config.JUDGE_EFFORT,
+            json_schema=VERDICT_JSON_SCHEMA,
         )
-        if message.stop_reason == "refusal":
-            raise ModelRefusal("The model declined to judge this debate.")
-
-        data = _loads_lenient(_extract_text(message))
+        data = _loads_lenient(raw)
 
         prosecutor_score = _clamp(data.get("prosecutor_score"))
         defender_score = _clamp(data.get("defender_score"))
@@ -221,8 +307,8 @@ class DebateEngine:
         if winner not in ("prosecutor", "defender", "draw"):
             winner = "draw"
 
-        # Guard against a verdict that contradicts its own scores, which would
-        # read as a bug on screen.
+        # Guard against a verdict that contradicts its own scores, which would read
+        # as a bug on screen.
         if winner == "prosecutor" and defender_score > prosecutor_score:
             winner = "defender"
         elif winner == "defender" and prosecutor_score > defender_score:
@@ -235,89 +321,169 @@ class DebateEngine:
             defender_score=defender_score,
             winner=winner,  # type: ignore[arg-type]
             confidence=_clamp(data.get("confidence")),
-            reasoning=str(data.get("reasoning") or "").strip(),
-            strongest_argument=str(data.get("strongest_argument") or "").strip(),
-            weakest_argument=str(data.get("weakest_argument") or "").strip(),
-            unresolved_question=str(data.get("unresolved_question") or "").strip(),
+            reasoning=_plain(str(data.get("reasoning") or "")).strip(),
+            strongest_argument=_plain(str(data.get("strongest_argument") or "")).strip(),
+            weakest_argument=_plain(str(data.get("weakest_argument") or "")).strip(),
+            unresolved_question=_plain(str(data.get("unresolved_question") or "")).strip(),
         )
 
     # -- public API --------------------------------------------------------
 
     async def run(self, claim: str) -> AsyncIterator[dict]:
-        """Yield debate events in order, finishing with the verdict."""
+        """Run the debate to whatever length it earns, then the first verdict."""
         turns: list[Turn] = []
 
-        def emit_round(number: int) -> dict:
-            return {"type": "round_start", "number": number, "name": ROUND_NAMES[number]}
+        async def play(
+            number: int,
+            name: str,
+            kind: str,
+            instruction: str,
+            speakers: tuple[str, ...],
+            frozen: bool,
+        ) -> AsyncIterator[dict]:
+            # `frozen` means the sides argue simultaneously: every speaker in the
+            # round sees the same snapshot, so nobody can react to a sibling turn
+            # produced moments earlier. Otherwise each speaker sees live state.
+            snapshot = list(turns) if frozen else None
+            for speaker in speakers:
+                async for event in self._stream_turn(
+                    claim=claim,
+                    visible=snapshot if snapshot is not None else list(turns),
+                    speaker=speaker,
+                    kind=kind,
+                    number=number,
+                    name=name,
+                    instruction=instruction,
+                ):
+                    if event["type"] == "turn_end":
+                        turns.append(Turn(**{k: v for k, v in event.items() if k != "type"}))
+                    yield event
 
-        def emit_turn(turn: Turn) -> dict:
-            return {"type": "turn", **turn.model_dump()}
+        both = ("prosecutor", "defender")
 
-        # Round 1 - openings, neither side sees the other.
-        yield emit_round(1)
-        yield {"type": "status", "message": "Both sides preparing opening arguments..."}
-        opening = await self._parallel_round(claim, 1, OPENING_INSTRUCTION, "opening", [])
-        turns.extend(opening)
-        for turn in opening:
-            yield emit_turn(turn)
+        yield {"type": "round_start", "number": 1, "name": OPENING_ROUND_NAME}
+        async for event in play(1, OPENING_ROUND_NAME, "opening", OPENING_INSTRUCTION, both, True):
+            yield event
 
-        # Round 2 - rebuttals, both answering the openings.
-        yield emit_round(2)
-        yield {"type": "status", "message": "Analyzing opponent's argument..."}
-        rebuttal = await self._parallel_round(
-            claim, 2, REBUTTAL_INSTRUCTION, "rebuttal", list(turns)
-        )
-        turns.extend(rebuttal)
-        for turn in rebuttal:
-            yield emit_turn(turn)
+        yield {"type": "round_start", "number": 2, "name": REBUTTAL_ROUND_NAME}
+        async for event in play(
+            2, REBUTTAL_ROUND_NAME, "rebuttal", REBUTTAL_INSTRUCTION, both, True
+        ):
+            yield event
 
-        # Round 3 - cross examination, strictly sequential.
-        yield emit_round(3)
+        yield {"type": "round_start", "number": 3, "name": CROSS_ROUND_NAME}
         for asker, answerer in (("prosecutor", "defender"), ("defender", "prosecutor")):
+            async for event in play(
+                3, CROSS_ROUND_NAME, "cross_question", CROSS_QUESTION_INSTRUCTION, (asker,), False
+            ):
+                yield event
+            async for event in play(
+                3, CROSS_ROUND_NAME, "cross_answer", CROSS_ANSWER_INSTRUCTION, (answerer,), False
+            ):
+                yield event
+
+        # Open clash rounds, for as long as the referee says the fight is real. One
+        # round is always reserved for the closing statements.
+        number = 3
+        clash = 0
+        while number + 2 < config.MAX_DEBATE_ROUNDS:
+            yield {"type": "status", "message": "Referee checking whether this is settled"}
+            rounds_left = config.MAX_DEBATE_ROUNDS - 1 - number
+            decision = await self._referee(claim, turns, rounds_left)
             yield {
-                "type": "status",
-                "message": SPEAKER_LABEL[asker] + " preparing a question...",
+                "type": "referee",
+                "resolved": decision.resolved,
+                "tension": decision.tension,
+                "note": decision.note,
+                "rounds_left": rounds_left,
             }
-            question_text = await self._speak(
-                asker, self._context(claim, turns, CROSS_QUESTION_INSTRUCTION)
-            )
+            if decision.resolved:
+                break
+
+            clash += 1
+            number += 1
+            name = f"Open Clash {clash}"
+            yield {"type": "round_start", "number": number, "name": name}
+            # Whoever answered last in the previous round speaks first here, so the
+            # same side does not always get the last word before the referee looks.
+            order = both if clash % 2 else tuple(reversed(both))
+            async for event in play(
+                number,
+                name,
+                "clash",
+                CLASH_INSTRUCTION.format(focus=decision.tension),
+                order,
+                False,
+            ):
+                yield event
+
+        yield {"type": "status", "message": "The judge may have a question"}
+        bench = await self._bench(claim, turns)
+        if bench.ask:
+            number += 1
+            yield {"type": "round_start", "number": number, "name": BENCH_ROUND_NAME}
             question = Turn(
-                round=3,
-                round_name=ROUND_NAMES[3],
-                speaker=asker,  # type: ignore[arg-type]
-                kind="cross_question",
-                text=question_text,
+                round=number,
+                round_name=BENCH_ROUND_NAME,
+                speaker="judge",
+                kind="judge_question",
+                text=bench.question,
             )
             turns.append(question)
-            yield emit_turn(question)
+            yield {"type": "turn_end", **question.model_dump()}
 
-            yield {
-                "type": "status",
-                "message": SPEAKER_LABEL[answerer] + " must answer directly...",
-            }
-            answer_text = await self._speak(
-                answerer, self._context(claim, turns, CROSS_ANSWER_INSTRUCTION)
-            )
-            answer = Turn(
-                round=3,
-                round_name=ROUND_NAMES[3],
-                speaker=answerer,  # type: ignore[arg-type]
-                kind="cross_answer",
-                text=answer_text,
-            )
-            turns.append(answer)
-            yield emit_turn(answer)
+            # Both answer the same question without seeing each other's answer, so
+            # neither can shelter behind the other's concession.
+            answerers = both if bench.target == "both" else (bench.target,)
+            async for event in play(
+                number, BENCH_ROUND_NAME, "bench_answer", BENCH_ANSWER_INSTRUCTION, answerers, True
+            ):
+                yield event
 
-        # Round 4 - closings.
-        yield emit_round(4)
-        yield {"type": "status", "message": "Both sides preparing final arguments..."}
-        closing = await self._parallel_round(claim, 4, CLOSING_INSTRUCTION, "closing", list(turns))
-        turns.extend(closing)
-        for turn in closing:
-            yield emit_turn(turn)
+        number += 1
+        yield {"type": "round_start", "number": number, "name": CLOSING_ROUND_NAME}
+        async for event in play(
+            number, CLOSING_ROUND_NAME, "closing", CLOSING_INSTRUCTION, both, True
+        ):
+            yield event
 
-        # Verdict.
-        yield {"type": "status", "message": "Judge reviewing the transcript..."}
+        yield {"type": "status", "message": "Judge reviewing the transcript"}
+        verdict = await self._judge(claim, turns)
+        yield {"type": "verdict", **verdict.model_dump()}
+        yield {"type": "done"}
+
+    async def challenge(self, claim: str, prior: list[Turn], argument: str) -> AsyncIterator[dict]:
+        """Take the user's counter-argument, make both sides answer it, re-judge."""
+        turns = list(prior)
+        number = max((turn.round for turn in turns), default=0) + 1
+        index = sum(1 for turn in turns if turn.kind == "user_argument") + 1
+        name = f"Challenge {index}"
+
+        yield {"type": "round_start", "number": number, "name": name}
+
+        user_turn = Turn(
+            round=number, round_name=name, speaker="user", kind="user_argument", text=argument
+        )
+        turns.append(user_turn)
+        yield {"type": "turn_end", **user_turn.model_dump()}
+
+        # Both sides answer the same challenge, neither seeing the other's answer.
+        frozen = list(turns)
+        for speaker in ("prosecutor", "defender"):
+            async for event in self._stream_turn(
+                claim=claim,
+                visible=frozen,
+                speaker=speaker,
+                kind="challenge_response",
+                number=number,
+                name=name,
+                instruction=USER_CHALLENGE_INSTRUCTION,
+            ):
+                if event["type"] == "turn_end":
+                    turns.append(Turn(**{k: v for k, v in event.items() if k != "type"}))
+                yield event
+
+        yield {"type": "status", "message": "Judge re-reviewing with your argument included"}
         verdict = await self._judge(claim, turns)
         yield {"type": "verdict", **verdict.model_dump()}
         yield {"type": "done"}
