@@ -4,7 +4,24 @@ Three minutes, one take, no live coding. The whole point of the product lands in
 first twenty seconds, so lead with it and let the debate run underneath while you
 talk.
 
-## Before you record
+## The rendered video
+
+`video/` in the scratchpad holds the pipeline that produced the submitted cut, and it
+is reproducible: `keybed.py` synthesises the keyboard track, `cards.py` renders the
+title, end card and captions, `assemble.py` cuts the screen capture to the narration
+and concatenates the scenes. Narration is edge-tts, so re-recording a line costs
+nothing.
+
+Two deep links make capture possible without any input automation:
+
+- `?claim=AI+will+replace+software+developers.` starts a live debate the moment the
+  page loads.
+- `?replay=demo-en` plays a recorded debate, challenge round included.
+
+That is how the footage was taken: launch Chrome at the deep link, capture the screen,
+never touch the keyboard.
+
+## Before you record (if you want your own take)
 
 ```bash
 # 1. Build the UI and run everything as one service, the way a reviewer will see it
