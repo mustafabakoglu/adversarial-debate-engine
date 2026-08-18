@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { ClaimInput } from "./components/ClaimInput";
 import { DebateView } from "./components/DebateView";
@@ -31,6 +31,21 @@ export default function App() {
     },
     [sound, start],
   );
+
+  // Deep links: ?claim=... starts a live debate, ?replay=name plays a recording.
+  // Written for demo recordings, where a page that argues the moment it loads beats
+  // one that needs a click, and useful on its own for sharing a claim.
+  const launched = useRef(false);
+  useEffect(() => {
+    if (launched.current) return;
+    launched.current = true;
+
+    const params = new URLSearchParams(window.location.search);
+    const recording = params.get("replay");
+    const linkedClaim = params.get("claim");
+    if (recording) replay(recording, linkedClaim ?? "");
+    else if (linkedClaim && linkedClaim.trim().length >= 8) start(linkedClaim.trim());
+  }, [replay, start]);
 
   const startReplay = useCallback(
     (name: string, nextClaim: string) => {
