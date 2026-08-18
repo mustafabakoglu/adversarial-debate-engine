@@ -13,9 +13,14 @@ services:
     envVars:
       - key: MODEL_PROVIDER
         value: mistral
-      - key: MODEL_API_KEY
+      # Set this in the dashboard, not here. One key or several, comma-separated:
+      # with more than one the adapter rotates when a free tier runs out.
+      - key: MODEL_API_KEYS
         sync: false
+      # A reviewer will not wait six minutes. Short debate, short turns.
       - key: MAX_DEBATE_ROUNDS
-        value: "6"
+        value: "4"
       - key: TURN_LENGTH_HINT
-        value: "60 to 110 words"
+        value: "55 to 95 words"
+      - key: REQUEST_MIN_INTERVAL
+        value: "4"

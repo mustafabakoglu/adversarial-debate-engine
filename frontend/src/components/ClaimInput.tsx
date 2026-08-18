@@ -49,10 +49,18 @@ export function ClaimInput({ onStart, onReplay, engine, disabled = false }: Prop
       <h1 className="mb-4 text-center text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
         This AI does not agree with you.
       </h1>
-      <p className="mb-12 max-w-xl text-center text-base leading-relaxed text-ink-soft">
+      <p className="mb-6 max-w-xl text-center text-base leading-relaxed text-ink-soft">
         Submit a claim. One agent attacks it, one defends it, and they keep going until a
         referee rules the disagreement is actually finished. A third agent then scores how
         well they argued &mdash; not whether you were right.
+      </p>
+
+      {/* A live debate is a dozen model calls. Saying so beats a reviewer wondering
+          whether the page has hung. */}
+      <p className="mb-10 max-w-xl text-center text-sm leading-relaxed text-ink-faint">
+        {live
+          ? "A live debate is a dozen model calls, so give it two or three minutes — every turn is written while you watch. In a hurry? Watch a recorded one below; it starts instantly."
+          : "Recorded debates below start instantly and are real runs of the engine."}
       </p>
 
       <div className="w-full">
