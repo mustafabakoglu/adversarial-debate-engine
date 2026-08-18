@@ -129,6 +129,105 @@ def intro(seconds: float = 7.0) -> None:
 
 
 # ---------------------------------------------------------------------------
+# How the AI is wired - the one thing a judging rubric always asks for
+# ---------------------------------------------------------------------------
+
+
+def pipeline_card(seconds: float = 15.0) -> None:
+    """Build the architecture diagram a box at a time, then hold with the loop alive."""
+    total = int(seconds * FPS)
+    frames: list[Image.Image] = []
+
+    title = font("seguisb.ttf", 46)
+    label = font("seguisb.ttf", 30)
+    note = font("segoeui.ttf", 23)
+    small = font("segoeui.ttf", 25)
+
+    #     name        x     w   colour        caption under the box
+    boxes = [
+        ("YOUR CLAIM", 96, 250, SOFT, "any language"),
+        ("PROSECUTOR", 420, 250, PROSECUTOR, "argues it is false"),
+        ("DEFENDER", 420, 250, DEFENDER, "argues it holds"),
+        ("REFEREE", 776, 250, INK, "another round, or done?"),
+        ("JUDGE", 1132, 250, INK, "asks, then scores"),
+        ("VERDICT", 1488, 250, PROSECUTOR, "validated object"),
+    ]
+
+    def box(draw, x, y, w, h, colour, name, caption, amount):
+        if amount <= 0:
+            return
+        edge = fade(colour, amount)
+        draw.rounded_rectangle([x, y, x + w, y + h], radius=14, outline=edge, width=3)
+        draw.text((x + 18, y + 18), name, font=label, fill=edge)
+        draw.text((x + 18, y + 58), caption, font=note, fill=fade(SOFT, amount * 0.9))
+
+    def arrow(draw, x1, y1, x2, y2, amount, colour=None):
+        if amount <= 0:
+            return
+        colour = fade(colour or FAINT, amount)
+        x = lerp(x1, x2, ease(amount))
+        draw.line([(x1, y1), (x, y2)], fill=colour, width=3)
+        if amount > 0.85:
+            draw.polygon([(x2, y2), (x2 - 12, y2 - 7), (x2 - 12, y2 + 7)], fill=colour)
+
+    for index in range(total):
+        t = index / (total - 1)
+        image = Image.new("RGB", (W, H), CANVAS)
+        draw = ImageDraw.Draw(image)
+
+        centred(draw, 150, "How the AI is wired", title, fade(INK, ease(t / 0.08)))
+        if t > 0.06:
+            centred(draw, 214, "ONE MODEL, FOUR SYSTEM PROMPTS", note,
+                    fade(FAINT, ease((t - 0.06) / 0.08)), spacing=5)
+
+        steps = [0.10, 0.20, 0.20, 0.34, 0.46, 0.58]
+        rows = [430, 330, 530, 430, 430, 430]
+        for (name, x, w, colour, caption), start, y in zip(boxes, steps, rows):
+            box(draw, x, y, w, 110, colour, name, caption, ease((t - start) / 0.10))
+
+        # claim -> both debaters, debaters -> referee, referee -> judge -> verdict
+        arrow(draw, 350, 485, 414, 385, ease((t - 0.17) / 0.06))
+        arrow(draw, 350, 485, 414, 585, ease((t - 0.17) / 0.06))
+        arrow(draw, 674, 385, 770, 470, ease((t - 0.30) / 0.06))
+        arrow(draw, 674, 585, 770, 500, ease((t - 0.30) / 0.06))
+        arrow(draw, 1030, 485, 1126, 485, ease((t - 0.44) / 0.06), INK)
+        arrow(draw, 1386, 485, 1482, 485, ease((t - 0.56) / 0.06), PROSECUTOR)
+
+        # the loop that makes the length variable, drawn under the row
+        if t > 0.38:
+            amount = ease((t - 0.38) / 0.10)
+            colour = fade(INK, amount)
+            y = 690
+            draw.line([(900, 545), (900, y)], fill=colour, width=3)
+            draw.line([(900, y), (545, y)], fill=colour, width=3)
+            draw.line([(545, y), (545, 645)], fill=colour, width=3)
+            if amount > 0.9:
+                draw.polygon([(545, 636), (538, 652), (552, 652)], fill=colour)
+            pulse = 0.55 + 0.45 * abs(math.sin(t * 9))
+            draw.text((610, y + 14), "still live → one more round, on the exact tension",
+                      font=note, fill=fade(INK, amount * pulse))
+
+        if t > 0.66:
+            amount = ease((t - 0.66) / 0.12)
+            centred(draw, 800, "Debater turns stream token by token over server-sent events.",
+                    small, fade(SOFT, amount))
+        if t > 0.74:
+            amount = ease((t - 0.74) / 0.12)
+            centred(draw, 838,
+                    "Referee, bench question and verdict are structured outputs, not prose.",
+                    small, fade(SOFT, amount))
+        if t > 0.82:
+            amount = ease((t - 0.82) / 0.12)
+            centred(draw, 876,
+                    "Two provider adapters. The debate protocol never knows which one it is on.",
+                    small, fade(SOFT, amount))
+
+        frames.append(image)
+
+    write(frames, "ai")
+
+
+# ---------------------------------------------------------------------------
 # Story cards between the footage
 # ---------------------------------------------------------------------------
 
@@ -283,6 +382,7 @@ if __name__ == "__main__":
     os.makedirs(ANIM, exist_ok=True)
     print("rendering animation frames")
     intro()
+    pipeline_card()
     for name, lines, accent, seconds in CARDS:
         story_card(name, lines, accent, seconds)
     end_card()

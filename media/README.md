@@ -1,6 +1,7 @@
 # The demo video, and how it was made
 
-[`demo.mp4`](demo.mp4) — 2:55, 1080p. A real debate, captured from the running app.
+[`demo.mp4`](demo.mp4) — 1080p, narrated. A real debate captured from the running app,
+with an animated walk-through of how the four AI roles are wired.
 
 Everything here is reproducible, which is the only reason it is in the repository: a
 demo video is usually a dead artefact you cannot re-cut when the product moves. This
@@ -12,7 +13,8 @@ one re-renders from four scripts.
 | [`keybed.py`](keybed.py) | Synthesises the keyboard track — the same bandpassed noise burst plus low thump the app plays in WebAudio. The screen capture is silent, so the sound the product is known for is rebuilt rather than lost. |
 | [`cards.py`](cards.py) | The lower-third captions. |
 | [`cut.py`](cut.py) | Cuts the capture to the timeline, overlays captions, mixes the bed, concatenates. |
-| [`script.json`](script.json) | The narration text. Only the hook and the sign-off are spoken; the rest is carried by the cards. |
+| [`voice.py`](voice.py) | The narration: every line, spoken with edge-tts, then put through a fixed signal chain — rumble out, chest in, sibilance down, light compression, one loudness target — because raw TTS reads thin. |
+| [`sfx.py`](sfx.py) | Two synthesised effects: a noise sweep for the cut into a card, a two-partial bell for the verdict. |
 
 ## Rebuilding it
 
