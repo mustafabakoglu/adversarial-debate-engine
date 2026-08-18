@@ -1,0 +1,21 @@
+# Deploy target for the hosted demo: one Docker service, one URL.
+#
+# MODEL_API_KEY is deliberately not set here — add it in the dashboard so it never
+# lands in the repository. Without it the deployment still serves the UI and the
+# recorded debates; live debates return 503 with an explanation.
+services:
+  - type: web
+    name: adversarial-debate-engine
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: MODEL_PROVIDER
+        value: mistral
+      - key: MODEL_API_KEY
+        sync: false
+      - key: MAX_DEBATE_ROUNDS
+        value: "6"
+      - key: TURN_LENGTH_HINT
+        value: "60 to 110 words"
