@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { fetchDemos, type DemoSummary } from "../api";
+import { fetchDemos, type DemoSummary, type EngineStatus } from "../api";
 
 const EXAMPLES = [
   "AI will replace software developers.",
@@ -12,12 +12,13 @@ const EXAMPLES = [
 interface Props {
   onStart: (claim: string) => void;
   onReplay: (name: string, claim: string) => void;
-  /** null while unknown, false on a static deployment with no engine behind it. */
-  live: boolean | null;
+  /** null while unknown. Drives what the claim box is allowed to promise. */
+  engine: EngineStatus | null;
   disabled?: boolean;
 }
 
-export function ClaimInput({ onStart, onReplay, live, disabled = false }: Props) {
+export function ClaimInput({ onStart, onReplay, engine, disabled = false }: Props) {
+  const live = engine === null ? null : engine.live;
   const [claim, setClaim] = useState("");
   const [demos, setDemos] = useState<DemoSummary[]>([]);
 
@@ -80,7 +81,9 @@ export function ClaimInput({ onStart, onReplay, live, disabled = false }: Props)
         <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
           <span className="text-xs text-ink-faint">
             {live === false
-              ? "Live debates need a model key — run it locally or deploy the container."
+              ? engine?.reachable
+                ? "This deployment has no model key, so live debates are off. The recorded debates below are real ones."
+                : "No engine behind this page — run it locally, or deploy the container, to argue your own claim."
               : tooShort
                 ? "A claim needs at least 8 characters."
                 : "⌘ / Ctrl + Enter to start"}

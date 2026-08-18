@@ -67,14 +67,22 @@ export interface DemoSummary {
  * So it has to work out which of the two it is: a full deployment where a claim can be
  * argued live, or a static host where only the recordings exist.
  */
-export async function fetchEngineStatus(): Promise<{ live: boolean; model: string | null }> {
+export interface EngineStatus {
+  /** An engine answered. */
+  reachable: boolean;
+  /** It answered and has a model key, so a claim can actually be argued. */
+  live: boolean;
+  model: string | null;
+}
+
+export async function fetchEngineStatus(): Promise<EngineStatus> {
   try {
     const response = await fetch("/api/health");
-    if (!response.ok) return { live: false, model: null };
+    if (!response.ok) return { reachable: false, live: false, model: null };
     const body = (await response.json()) as { configured?: boolean; model?: string | null };
-    return { live: Boolean(body.configured), model: body.model ?? null };
+    return { reachable: true, live: Boolean(body.configured), model: body.model ?? null };
   } catch {
-    return { live: false, model: null };
+    return { reachable: false, live: false, model: null };
   }
 }
 

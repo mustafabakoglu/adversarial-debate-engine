@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { fetchEngineStatus } from "./api";
+import { fetchEngineStatus, type EngineStatus } from "./api";
 import { ClaimInput } from "./components/ClaimInput";
 import { DebateView } from "./components/DebateView";
 import { SettingsBar } from "./components/SettingsBar";
@@ -26,16 +26,17 @@ export default function App() {
 
   // A static deployment has the recordings but no engine. Ask once, then say so
   // plainly rather than letting someone submit a claim into nothing.
-  const [live, setLive] = useState<boolean | null>(null);
+  const [engine, setEngine] = useState<EngineStatus | null>(null);
   useEffect(() => {
     let mounted = true;
-    void fetchEngineStatus().then(({ live: reachable }) => {
-      if (mounted) setLive(reachable);
+    void fetchEngineStatus().then((status) => {
+      if (mounted) setEngine(status);
     });
     return () => {
       mounted = false;
     };
   }, []);
+  const live = engine === null ? null : engine.live;
 
   // Starting a debate is a click, which is the browser's price for playing audio.
   const startDebate = useCallback(
@@ -51,7 +52,7 @@ export default function App() {
   // one that needs a click, and useful on its own for sharing a claim.
   const launched = useRef(false);
   useEffect(() => {
-    if (launched.current || live === null) return;
+    if (launched.current || engine === null) return;
     launched.current = true;
 
     const params = new URLSearchParams(window.location.search);
@@ -59,7 +60,7 @@ export default function App() {
     const linkedClaim = params.get("claim");
     if (recording) replay(recording, linkedClaim ?? "", live === false);
     else if (linkedClaim && linkedClaim.trim().length >= 8) start(linkedClaim.trim());
-  }, [live, replay, start]);
+  }, [engine, live, replay, start]);
 
   const startReplay = useCallback(
     (name: string, nextClaim: string) => {
@@ -73,7 +74,7 @@ export default function App() {
     <main className="min-h-screen bg-canvas text-ink">
       <SettingsBar sound={sound} theme={theme} />
       {claim === null ? (
-        <ClaimInput onStart={startDebate} onReplay={startReplay} live={live} />
+        <ClaimInput onStart={startDebate} onReplay={startReplay} engine={engine} />
       ) : (
         <DebateView
           claim={claim}
